@@ -40,7 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Color Palette matching EcoMeal & eWaste Management Dribbble Shot
+// Color Palette matching Eco UI Design
 val EcoHeaderDark = Color(0xFF0F382C)
 val EcoHeaderGradientEnd = Color(0xFF1E5641)
 val EcoPrimaryGreen = Color(0xFF1E7A38)
@@ -67,15 +67,9 @@ enum class DashboardSubScreen {
     NewReport,
     TicketDetails,
     Notifications,
-    Tips
+    Tips,
+    Profile
 }
-
-data class NavTabItem(
-    val label: String,
-    val activeIcon: ImageVector,
-    val inactiveIcon: ImageVector,
-    val tabIndex: Int
-)
 
 data class ActionGridItem(
     val title: String,
@@ -101,15 +95,22 @@ data class TipItem(
     val imageType: String
 )
 
+data class NavTabItem(
+    val label: String,
+    val activeIcon: ImageVector,
+    val inactiveIcon: ImageVector,
+    val tabIndex: Int
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CityCareDashboardScreen(
     onLogout: () -> Unit = {}
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) } // 0: Home, 1: Reports, 2: Support, 3: Profile, 4: More
+    var selectedTab by remember { mutableIntStateOf(0) } // 0: Home, 1: Reports, 2: Support, 3: More
     var currentSubScreen by remember { mutableStateOf(DashboardSubScreen.Main) }
 
-    // Quick Services Grid state & modals from original UI
+    // Quick Services Grid state & modals
     var selectedGridFeature by remember { mutableStateOf<String?>(null) }
     var showReportDialog by remember { mutableStateOf(false) }
     var showReportSuccessModal by remember { mutableStateOf(false) }
@@ -178,79 +179,86 @@ fun CityCareDashboardScreen(
         containerColor = Color(0xFFF8FAFC),
         bottomBar = {
             if (currentSubScreen == DashboardSubScreen.Main) {
-                // 5-Item Bottom Navigation Bar (Home, Reports, Support, Profile, More)
-                Surface(
-                    color = Color.White,
-                    shadowElevation = 12.dp,
-                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(68.dp)
+                // Elevated Center Floating Camera FAB Bottom Navigation Bar
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.BottomCenter
                 ) {
-                    Row(
+                    Surface(
+                        color = Color.White,
+                        shadowElevation = 12.dp,
+                        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceAround,
-                        verticalAlignment = Alignment.CenterVertically
+                            .fillMaxWidth()
+                            .height(76.dp)
                     ) {
-                        val navItems = listOf(
-                            NavTabItem("Home", Icons.Default.Home, Icons.Outlined.Home, 0),
-                            NavTabItem("Reports", Icons.AutoMirrored.Filled.Assignment, Icons.AutoMirrored.Outlined.Assignment, 1),
-                            NavTabItem("Support", Icons.Default.HeadsetMic, Icons.Outlined.HeadsetMic, 2),
-                            NavTabItem("Profile", Icons.Default.Person, Icons.Outlined.Person, 3),
-                            NavTabItem("More", Icons.Default.MoreHoriz, Icons.Outlined.MoreHoriz, 4)
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 6.dp, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // 1. Home Tab
+                            NavTabItemComposable(
+                                label = "Home",
+                                activeIcon = Icons.Default.Home,
+                                inactiveIcon = Icons.Outlined.Home,
+                                isSelected = selectedTab == 0,
+                                onClick = { selectedTab = 0 }
+                            )
 
-                        navItems.forEach { (label, activeIcon, inactiveIcon, tabIndex) ->
-                            val isSelected = selectedTab == tabIndex
-                            Surface(
-                                onClick = { selectedTab = tabIndex },
-                                color = if (isSelected) EcoHomeTabYellow else Color.Transparent,
-                                shape = RoundedCornerShape(20.dp),
-                                modifier = Modifier.height(46.dp)
-                            ) {
-                                if (isSelected) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = activeIcon,
-                                            contentDescription = label,
-                                            tint = EcoTextDark,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(
-                                            text = label,
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = EcoTextDark
-                                        )
-                                    }
-                                } else {
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = inactiveIcon,
-                                            contentDescription = label,
-                                            tint = EcoTextMuted,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(
-                                            text = label,
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Medium,
-                                            color = EcoTextMuted
-                                        )
-                                    }
-                                }
-                            }
+                            // 2. Reports Tab
+                            NavTabItemComposable(
+                                label = "Reports",
+                                activeIcon = Icons.AutoMirrored.Filled.Assignment,
+                                inactiveIcon = Icons.AutoMirrored.Outlined.Assignment,
+                                isSelected = selectedTab == 1,
+                                onClick = { selectedTab = 1 }
+                            )
+
+                            // Center Spacer for Floating Camera Button
+                            Spacer(modifier = Modifier.width(56.dp))
+
+                            // 3. Support Tab
+                            NavTabItemComposable(
+                                label = "Support",
+                                activeIcon = Icons.Default.HeadsetMic,
+                                inactiveIcon = Icons.Outlined.HeadsetMic,
+                                isSelected = selectedTab == 2,
+                                onClick = { selectedTab = 2 }
+                            )
+
+                            // 4. More Tab
+                            NavTabItemComposable(
+                                label = "More",
+                                activeIcon = Icons.Default.MoreHoriz,
+                                inactiveIcon = Icons.Outlined.MoreHoriz,
+                                isSelected = selectedTab == 3,
+                                onClick = { selectedTab = 3 }
+                            )
+                        }
+                    }
+
+                    // Center Elevated Floating Camera FAB Button
+                    Surface(
+                        onClick = { currentSubScreen = DashboardSubScreen.NewReport },
+                        shape = CircleShape,
+                        color = EcoPrimaryGreen,
+                        shadowElevation = 8.dp,
+                        border = androidx.compose.foundation.BorderStroke(3.dp, Color.White),
+                        modifier = Modifier
+                            .offset(y = (-24).dp)
+                            .size(56.dp)
+                            .align(Alignment.TopCenter)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.PhotoCamera,
+                                contentDescription = "Report Waste Camera",
+                                tint = Color.White,
+                                modifier = Modifier.size(26.dp)
+                            )
                         }
                     }
                 }
@@ -294,6 +302,14 @@ fun CityCareDashboardScreen(
                     )
                 }
 
+                DashboardSubScreen.Profile -> {
+                    ProfileScreenContent(
+                        onBack = { currentSubScreen = DashboardSubScreen.Main },
+                        onOpenNotifications = { currentSubScreen = DashboardSubScreen.Notifications },
+                        onLogout = onLogout
+                    )
+                }
+
                 DashboardSubScreen.Main -> {
                     when (selectedTab) {
                         0 -> HomeScreenContent(
@@ -307,6 +323,7 @@ fun CityCareDashboardScreen(
                             },
                             onOpenNewReport = { currentSubScreen = DashboardSubScreen.NewReport },
                             onOpenNotifications = { currentSubScreen = DashboardSubScreen.Notifications },
+                            onOpenProfile = { currentSubScreen = DashboardSubScreen.Profile },
                             onSelectReport = { report ->
                                 selectedReport = report
                                 currentSubScreen = DashboardSubScreen.TicketDetails
@@ -317,6 +334,7 @@ fun CityCareDashboardScreen(
                         1 -> MyReportsScreenContent(
                             reports = reportList,
                             onOpenNotifications = { currentSubScreen = DashboardSubScreen.Notifications },
+                            onOpenProfile = { currentSubScreen = DashboardSubScreen.Profile },
                             onSelectReport = { report ->
                                 selectedReport = report
                                 currentSubScreen = DashboardSubScreen.TicketDetails
@@ -332,12 +350,7 @@ fun CityCareDashboardScreen(
                             }
                         )
 
-                        3 -> ProfileScreenContent(
-                            onOpenNotifications = { currentSubScreen = DashboardSubScreen.Notifications },
-                            onLogout = onLogout
-                        )
-
-                        4 -> MoreScreenContent(
+                        3 -> MoreScreenContent(
                             onOpenNotifications = { currentSubScreen = DashboardSubScreen.Notifications },
                             onOpenTips = { currentSubScreen = DashboardSubScreen.Tips }
                         )
@@ -423,7 +436,7 @@ fun CityCareDashboardScreen(
 }
 
 // -----------------------------------------------------------------------------
-// 1. HOME TAB SCREEN CONTENT (EcoMeal & eWaste Management Layout)
+// 1. HOME TAB SCREEN CONTENT
 // -----------------------------------------------------------------------------
 @Composable
 fun HomeScreenContent(
@@ -431,6 +444,7 @@ fun HomeScreenContent(
     onSelectGridFeature: (String) -> Unit,
     onOpenNewReport: () -> Unit,
     onOpenNotifications: () -> Unit,
+    onOpenProfile: () -> Unit,
     onSelectReport: (WasteReportItem) -> Unit,
     onViewAllReports: () -> Unit
 ) {
@@ -460,7 +474,8 @@ fun HomeScreenContent(
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.clickable { onOpenProfile() }
                         ) {
                             Box(
                                 modifier = Modifier
@@ -502,7 +517,7 @@ fun HomeScreenContent(
                             }
                         }
 
-                        // Notification Bell with Red Badge
+                        // Notification Bell with 100% Visible Red Badge
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
@@ -515,15 +530,16 @@ fun HomeScreenContent(
                                 imageVector = Icons.Outlined.Notifications,
                                 contentDescription = "Notifications",
                                 tint = EcoHeaderDark,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(22.dp)
                             )
                             Box(
                                 modifier = Modifier
-                                    .size(8.dp)
+                                    .padding(top = 6.dp, end = 6.dp)
+                                    .size(9.dp)
                                     .clip(CircleShape)
                                     .background(Color(0xFFEF4444))
+                                    .border(1.5.dp, Color.White, CircleShape)
                                     .align(Alignment.TopEnd)
-                                    .padding(2.dp)
                             )
                         }
                     }
@@ -542,7 +558,7 @@ fun HomeScreenContent(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text("Eco Score & Recycling", fontSize = 11.sp, color = Color(0xFFCBD5E1))
                                 Text("12.5 kg Recycled", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
                                 Text("🌱 +85 Eco Impact Points", fontSize = 10.sp, color = EcoLimeAccent, fontWeight = FontWeight.Bold)
@@ -624,68 +640,16 @@ fun HomeScreenContent(
                             imageVector = Icons.Outlined.Info,
                             contentDescription = null,
                             tint = Color(0xFF93C5FD),
-                            modifier = Modifier.size(38.dp)
+                            modifier = Modifier.size(32.dp)
                         )
                     }
                 }
 
-                // 3. REPORT UNCOLLECTED WASTE Large Primary Button
-                Card(
-                    onClick = { onOpenNewReport() },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = EcoPrimaryGreen),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 22.dp, horizontal = 16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(54.dp)
-                                .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.2f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.PhotoCamera,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Text(
-                            text = "REPORT UNCOLLECTED WASTE",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color.White,
-                            textAlign = TextAlign.Center
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Text(
-                            text = "Snap photo & auto-attach GPS/Purok",
-                            fontSize = 11.sp,
-                            color = Color(0xFFE2E8F0),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-
-                // 4. Quick Status Summary Cards (2 PENDING, 1 ASSIGNED, 5 DONE)
+                // 3. Quick Status Summary Cards (2 PENDING, 1 ASSIGNED, 5 DONE)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // Card 1: PENDING
                     Card(
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -713,7 +677,6 @@ fun HomeScreenContent(
                         }
                     }
 
-                    // Card 2: ASSIGNED
                     Card(
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -741,7 +704,6 @@ fun HomeScreenContent(
                         }
                     }
 
-                    // Card 3: DONE
                     Card(
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -770,7 +732,7 @@ fun HomeScreenContent(
                     }
                 }
 
-                // 5. Quick Services Action Feature Grid
+                // 4. Quick Services Action Feature Grid
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -863,7 +825,7 @@ fun HomeScreenContent(
                     }
                 }
 
-                // 6. Recent Reports Header & Item
+                // 5. Recent Reports Header & Item
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -884,7 +846,7 @@ fun HomeScreenContent(
                     )
                 }
 
-                // Recent Report Card (Overflowing Public Bin)
+                // Recent Report Card
                 Card(
                     onClick = {
                         onSelectReport(
@@ -935,7 +897,6 @@ fun HomeScreenContent(
                             color = EcoTextMuted
                         )
 
-                        // Map Placeholder Box
                         MapPreviewBox(heightDp = 100)
                     }
                 }
@@ -962,7 +923,6 @@ fun NewWasteReportScreen(
     var landmarkInput by remember { mutableStateOf("Near Barangay Health Center") }
     var remarksInput by remember { mutableStateOf("Trash has been uncollected for 3 days.") }
 
-    // Camera Launcher
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap ->
@@ -1005,7 +965,6 @@ fun NewWasteReportScreen(
             .fillMaxSize()
             .background(Color(0xFFF8FAFC))
     ) {
-        // Top Header
         Surface(
             color = Color.White,
             shadowElevation = 2.dp,
@@ -1042,7 +1001,6 @@ fun NewWasteReportScreen(
         ) {
             item { Spacer(modifier = Modifier.height(10.dp)) }
 
-            // 1. Photo Evidence Section
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
@@ -1052,7 +1010,6 @@ fun NewWasteReportScreen(
                         color = EcoTextDark
                     )
 
-                    // Dashed Camera Capture Card
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -1097,7 +1054,6 @@ fun NewWasteReportScreen(
                 }
             }
 
-            // 2. Location Details
             item {
                 Card(
                     shape = RoundedCornerShape(14.dp),
@@ -1125,7 +1081,6 @@ fun NewWasteReportScreen(
                             )
                         }
 
-                        // Map Preview Box with Pin
                         MapPreviewBox(heightDp = 110)
 
                         Text("Barangay", fontSize = 11.sp, color = EcoTextMuted)
@@ -1158,7 +1113,6 @@ fun NewWasteReportScreen(
                 }
             }
 
-            // 3. Incident Category
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(
@@ -1179,7 +1133,6 @@ fun NewWasteReportScreen(
                         )
                     }
 
-                    // Chips Layout
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             CategoryChip(
@@ -1211,7 +1164,6 @@ fun NewWasteReportScreen(
                 }
             }
 
-            // 4. Additional Remarks
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
@@ -1225,15 +1177,14 @@ fun NewWasteReportScreen(
                         value = remarksInput,
                         onValueChange = { remarksInput = it },
                         placeholder = { Text("Describe concern...", fontSize = 12.sp) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(90.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3,
+                        maxLines = 5,
                         shape = RoundedCornerShape(12.dp)
                     )
                 }
             }
 
-            // 5. Submit Button
             item {
                 Button(
                     onClick = {
@@ -1288,6 +1239,7 @@ fun NewWasteReportScreen(
 fun MyReportsScreenContent(
     reports: List<WasteReportItem>,
     onOpenNotifications: () -> Unit,
+    onOpenProfile: () -> Unit,
     onSelectReport: (WasteReportItem) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -1314,25 +1266,28 @@ fun MyReportsScreenContent(
         item {
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Header Row: CityCare CDO + Notification Bell
+            // Header Row: CityCare CDO + Profile Avatar + Notification Bell
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { onOpenProfile() }
+                ) {
                     Box(
                         modifier = Modifier
-                            .size(28.dp)
+                            .size(32.dp)
                             .clip(CircleShape)
                             .background(EcoPrimaryGreen),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Recycling,
-                            contentDescription = null,
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile",
                             tint = Color.White,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
@@ -1372,7 +1327,6 @@ fun MyReportsScreenContent(
             )
         }
 
-        // Search Bar & Filter Button Row
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1410,7 +1364,6 @@ fun MyReportsScreenContent(
             }
         }
 
-        // Filter Tabs Row (ALL, PENDING, ASSIGNED, RESOLVED)
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1440,7 +1393,6 @@ fun MyReportsScreenContent(
             }
         }
 
-        // List of Report Cards
         items(filteredReports) { report ->
             Card(
                 onClick = { onSelectReport(report) },
@@ -1523,7 +1475,6 @@ fun SupportScreenContent(
         item {
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Agent Illustration & Callout Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1563,7 +1514,6 @@ fun SupportScreenContent(
             }
         }
 
-        // Action Buttons Row: Create Ticket & Call Support
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1603,7 +1553,6 @@ fun SupportScreenContent(
             }
         }
 
-        // Section Header: Complaint History & Year Dropdown
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1646,7 +1595,6 @@ fun SupportScreenContent(
             }
         }
 
-        // Complaint History Card items
         item {
             Card(
                 onClick = {
@@ -1769,7 +1717,6 @@ fun MoreScreenContent(
             }
         }
 
-        // App Version Row
         item {
             Card(
                 shape = RoundedCornerShape(12.dp),
@@ -2489,10 +2436,11 @@ fun TipThumbnailBox(
 }
 
 // -----------------------------------------------------------------------------
-// 9. PROFILE TAB CONTENT
+// 9. PROFILE TAB CONTENT (HARMONIZED WITH ECO GREEN THEME)
 // -----------------------------------------------------------------------------
 @Composable
 fun ProfileScreenContent(
+    onBack: () -> Unit = {},
     onOpenNotifications: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -2544,30 +2492,24 @@ fun ProfileScreenContent(
         item {
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Harmonized Header Row matching overall app theme
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(28.dp)
-                            .clip(CircleShape)
-                            .background(EcoPrimaryGreen),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    IconButton(onClick = onBack) {
                         Icon(
-                            imageVector = Icons.Default.Recycling,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = EcoPrimaryGreen
                         )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "CityCare CDO",
-                        fontSize = 16.sp,
+                        text = "User Profile",
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = EcoPrimaryGreen
                     )
@@ -2592,6 +2534,7 @@ fun ProfileScreenContent(
             }
         }
 
+        // Profile Main Card with Cover Banner & Unclipped Avatar Camera Badge
         item {
             Card(
                 shape = RoundedCornerShape(16.dp),
@@ -2603,6 +2546,7 @@ fun ProfileScreenContent(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    // Cover Banner Image Box
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -2659,7 +2603,7 @@ fun ProfileScreenContent(
                         }
 
                         Surface(
-                            onClick = { },
+                            onClick = onBack,
                             shape = CircleShape,
                             color = Color.White,
                             shadowElevation = 3.dp,
@@ -2699,46 +2643,55 @@ fun ProfileScreenContent(
                         }
                     }
 
+                    // Overlapping Avatar with 100% Unclipped Camera Badge
                     Box(
                         modifier = Modifier
                             .offset(y = (-40).dp)
-                            .size(84.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFCBD5E1))
-                            .border(3.dp, Color.White, CircleShape)
-                            .clickable { showProfilePicker = true },
-                        contentAlignment = Alignment.Center
+                            .size(88.dp)
                     ) {
-                        if (profileBitmap != null) {
-                            Image(
-                                bitmap = profileBitmap!!.asImageBitmap(),
-                                contentDescription = "Profile Photo",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Profile Photo",
-                                tint = Color.White,
-                                modifier = Modifier.size(48.dp)
-                            )
-                        }
-
                         Box(
                             modifier = Modifier
-                                .size(26.dp)
+                                .size(84.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFCBD5E1))
+                                .border(3.dp, Color.White, CircleShape)
+                                .align(Alignment.Center)
+                                .clickable { showProfilePicker = true },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (profileBitmap != null) {
+                                Image(
+                                    bitmap = profileBitmap!!.asImageBitmap(),
+                                    contentDescription = "Profile Photo",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = "Profile Photo",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(48.dp)
+                                )
+                            }
+                        }
+
+                        // Fully visible Camera Edit Badge on bottom-right corner of avatar
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
                                 .clip(CircleShape)
                                 .background(EcoPrimaryGreen)
                                 .border(2.dp, Color.White, CircleShape)
-                                .align(Alignment.BottomEnd),
+                                .align(Alignment.BottomEnd)
+                                .clickable { showProfilePicker = true },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.PhotoCamera,
                                 contentDescription = "Edit Profile Photo",
                                 tint = Color.White,
-                                modifier = Modifier.size(13.dp)
+                                modifier = Modifier.size(14.dp)
                             )
                         }
                     }
@@ -2924,6 +2877,66 @@ fun ProfileScreenContent(
 // -----------------------------------------------------------------------------
 // HELPER COMPOSABLES
 // -----------------------------------------------------------------------------
+@Composable
+fun NavTabItemComposable(
+    label: String,
+    activeIcon: ImageVector,
+    inactiveIcon: ImageVector,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        color = if (isSelected) EcoHomeTabYellow else Color.Transparent,
+        shape = RoundedCornerShape(22.dp)
+    ) {
+        if (isSelected) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+            ) {
+                Icon(
+                    imageVector = activeIcon,
+                    contentDescription = label,
+                    tint = EcoTextDark,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = label,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = EcoTextDark,
+                    maxLines = 1,
+                    softWrap = false
+                )
+            }
+        } else {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+            ) {
+                Icon(
+                    imageVector = inactiveIcon,
+                    contentDescription = label,
+                    tint = EcoTextMuted,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = label,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = EcoTextMuted,
+                    maxLines = 1,
+                    softWrap = false
+                )
+            }
+        }
+    }
+}
+
 fun loadBitmapFromUri(context: android.content.Context, uri: android.net.Uri): Bitmap? {
     return try {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
