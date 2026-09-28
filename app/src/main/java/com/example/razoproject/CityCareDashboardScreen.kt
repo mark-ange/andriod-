@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -25,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -38,15 +40,27 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Color Palette matching Screenshots
-val DashboardGreenPrimary = Color(0xFF1E7A38)
+// Color Palette matching EcoMeal & eWaste Management Dribbble Shot
+val EcoHeaderDark = Color(0xFF0F382C)
+val EcoHeaderGradientEnd = Color(0xFF1E5641)
+val EcoPrimaryGreen = Color(0xFF1E7A38)
+val EcoMintAccent = Color(0xFF2EC4B6)
+val EcoLimeAccent = Color(0xFF80ED99)
+val EcoBannerBg = Color(0xFFE2ECFF)
+val EcoCardBorder = Color(0xFFE2E8F0)
+val EcoTextDark = Color(0xFF1E293B)
+val EcoTextMuted = Color(0xFF64748B)
+val EcoHomeTabYellow = Color(0xFFFACC15)
+
+// Backward Compatibility Aliases
+val DashboardGreenPrimary = EcoPrimaryGreen
 val DashboardGreenDark = Color(0xFF14532D)
-val DashboardBannerBg = Color(0xFFE2ECFF)
+val DashboardBannerBg = EcoBannerBg
 val DashboardBannerIconBg = Color(0xFF16A34A)
-val DashboardCardBorder = Color(0xFFE2E8F0)
-val DashboardTextDark = Color(0xFF1E293B)
-val DashboardTextMuted = Color(0xFF64748B)
-val DashboardHomeTabYellow = Color(0xFFFACC15)
+val DashboardCardBorder = EcoCardBorder
+val DashboardTextDark = EcoTextDark
+val DashboardTextMuted = EcoTextMuted
+val DashboardHomeTabYellow = EcoHomeTabYellow
 
 enum class DashboardSubScreen {
     Main,
@@ -55,6 +69,13 @@ enum class DashboardSubScreen {
     Notifications,
     Tips
 }
+
+data class NavTabItem(
+    val label: String,
+    val activeIcon: ImageVector,
+    val inactiveIcon: ImageVector,
+    val tabIndex: Int
+)
 
 data class ActionGridItem(
     val title: String,
@@ -107,7 +128,7 @@ fun CityCareDashboardScreen(
         )
     }
 
-    // Quick Action Grid List (Original UI)
+    // Quick Action Grid List
     val actionGridList = remember {
         listOf(
             ActionGridItem("Schedule", Icons.Outlined.Schedule, Color(0xFF334155)),
@@ -160,7 +181,8 @@ fun CityCareDashboardScreen(
                 // 5-Item Bottom Navigation Bar (Home, Reports, Support, Profile, More)
                 Surface(
                     color = Color.White,
-                    shadowElevation = 8.dp,
+                    shadowElevation = 12.dp,
+                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(68.dp)
@@ -172,43 +194,59 @@ fun CityCareDashboardScreen(
                         horizontalArrangement = Arrangement.SpaceAround,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Nav Items List
                         val navItems = listOf(
-                            Triple("Home", Icons.Default.Home, 0),
-                            Triple("Reports", Icons.AutoMirrored.Outlined.Assignment, 1),
-                            Triple("Support", Icons.Outlined.HeadsetMic, 2),
-                            Triple("Profile", Icons.Outlined.Person, 3),
-                            Triple("More", Icons.Outlined.MoreHoriz, 4)
+                            NavTabItem("Home", Icons.Default.Home, Icons.Outlined.Home, 0),
+                            NavTabItem("Reports", Icons.AutoMirrored.Filled.Assignment, Icons.AutoMirrored.Outlined.Assignment, 1),
+                            NavTabItem("Support", Icons.Default.HeadsetMic, Icons.Outlined.HeadsetMic, 2),
+                            NavTabItem("Profile", Icons.Default.Person, Icons.Outlined.Person, 3),
+                            NavTabItem("More", Icons.Default.MoreHoriz, Icons.Outlined.MoreHoriz, 4)
                         )
 
-                        navItems.forEach { (label, icon, tabIndex) ->
+                        navItems.forEach { (label, activeIcon, inactiveIcon, tabIndex) ->
                             val isSelected = selectedTab == tabIndex
                             Surface(
                                 onClick = { selectedTab = tabIndex },
-                                color = if (isSelected) DashboardHomeTabYellow else Color.Transparent,
+                                color = if (isSelected) EcoHomeTabYellow else Color.Transparent,
                                 shape = RoundedCornerShape(20.dp),
-                                modifier = Modifier.height(42.dp)
+                                modifier = Modifier.height(46.dp)
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(
-                                        horizontal = if (isSelected) 12.dp else 8.dp,
-                                        vertical = 6.dp
-                                    )
-                                ) {
-                                    Icon(
-                                        imageVector = icon,
-                                        contentDescription = label,
-                                        tint = if (isSelected) DashboardTextDark else DashboardTextMuted,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    if (isSelected) {
+                                if (isSelected) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = activeIcon,
+                                            contentDescription = label,
+                                            tint = EcoTextDark,
+                                            modifier = Modifier.size(20.dp)
+                                        )
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
                                             text = label,
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = DashboardTextDark
+                                            color = EcoTextDark
+                                        )
+                                    }
+                                } else {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = inactiveIcon,
+                                            contentDescription = label,
+                                            tint = EcoTextMuted,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = label,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = EcoTextMuted
                                         )
                                     }
                                 }
@@ -354,7 +392,7 @@ fun CityCareDashboardScreen(
                         showReportDialog = false
                         showReportSuccessModal = true
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = DashboardGreenPrimary)
+                    colors = ButtonDefaults.buttonColors(containerColor = EcoPrimaryGreen)
                 ) {
                     Text("SUBMIT REPORT", fontWeight = FontWeight.Bold)
                 }
@@ -370,12 +408,12 @@ fun CityCareDashboardScreen(
     if (showReportSuccessModal) {
         AlertDialog(
             onDismissRequest = { showReportSuccessModal = false },
-            title = { Text("Report Submitted!", fontWeight = FontWeight.Bold, color = DashboardBannerIconBg) },
+            title = { Text("Report Submitted!", fontWeight = FontWeight.Bold, color = Color(0xFF16A34A)) },
             text = { Text("Your report reference #CR-2026-102 has been received by CLENRO.") },
             confirmButton = {
                 Button(
                     onClick = { showReportSuccessModal = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = DashboardGreenPrimary)
+                    colors = ButtonDefaults.buttonColors(containerColor = EcoPrimaryGreen)
                 ) {
                     Text("OK", fontWeight = FontWeight.Bold)
                 }
@@ -385,7 +423,7 @@ fun CityCareDashboardScreen(
 }
 
 // -----------------------------------------------------------------------------
-// 1. HOME TAB SCREEN CONTENT
+// 1. HOME TAB SCREEN CONTENT (EcoMeal & eWaste Management Layout)
 // -----------------------------------------------------------------------------
 @Composable
 fun HomeScreenContent(
@@ -397,468 +435,513 @@ fun HomeScreenContent(
     onViewAllReports: () -> Unit
 ) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 18.dp),
+        modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // 1. Header Profile & Hero Emerald Section
         item {
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 1. Header Profile Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    // Profile Avatar
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFCBD5E1)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "User Avatar",
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-
-                    Column {
-                        Text(
-                            text = "Hello, Marai!",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = DashboardTextDark
-                        )
-                        Text(
-                            text = "📍 Zone 3, Carmen, CDO",
-                            fontSize = 11.sp,
-                            color = DashboardTextMuted
-                        )
-                    }
-                }
-
-                // Notification Bell Icon with Red Badge
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color.White)
-                        .border(1.dp, DashboardCardBorder, CircleShape)
-                        .clickable { onOpenNotifications() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Notifications,
-                        contentDescription = "Notifications",
-                        tint = DashboardTextDark,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    // Red Badge Dot
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFEF4444))
-                            .align(Alignment.TopEnd)
-                            .padding(2.dp)
-                    )
-                }
-            }
-        }
-
-        // 2. Collection Schedule Banner
-        item {
-            Card(
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = DashboardBannerBg),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBFDBFE)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Megaphone Icon
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(DashboardBannerIconBg),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "CLENRO Collection Schedule for Carmen:",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = DashboardTextDark
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "MWF - Biodegradable\nTTHS - Non-Bio",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = DashboardTextMuted,
-                            lineHeight = 15.sp
-                        )
-                    }
-
-                    // Info Watermark
-                    Icon(
-                        imageVector = Icons.Outlined.Info,
-                        contentDescription = null,
-                        tint = Color(0xFF93C5FD),
-                        modifier = Modifier.size(38.dp)
-                    )
-                }
-            }
-        }
-
-        // 3. REPORT UNCOLLECTED WASTE Large Primary Button
-        item {
-            Card(
-                onClick = { onOpenNewReport() },
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = DashboardGreenPrimary),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 22.dp, horizontal = 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    // Camera Circle Icon
-                    Box(
-                        modifier = Modifier
-                            .size(54.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.2f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PhotoCamera,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = "REPORT UNCOLLECTED WASTE",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "Snap photo & auto-attach GPS/Purok",
-                        fontSize = 11.sp,
-                        color = Color(0xFFE2E8F0),
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-        }
-
-        // 4. Quick Status Summary Cards (2 PENDING, 1 ASSIGNED, 5 DONE)
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                // Card 1: PENDING
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "2",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFFEAB308)
-                        )
-                        Text(
-                            text = "PENDING",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = DashboardTextMuted
-                        )
-                    }
-                }
-
-                // Card 2: ASSIGNED
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "1",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF0284C7)
-                        )
-                        Text(
-                            text = "ASSIGNED",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = DashboardTextMuted
-                        )
-                    }
-                }
-
-                // Card 3: DONE
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "5",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF16A34A)
-                        )
-                        Text(
-                            text = "DONE",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = DashboardTextMuted
-                        )
-                    }
-                }
-            }
-        }
-
-        // 5. Quick Services Action Feature Grid
-        item {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Text(
-                    text = "Quick Services",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = DashboardTextDark
-                )
-
-                // 2 Rows x 3 Columns Grid
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        for (i in 0..2) {
-                            if (i < actionGridList.size) {
-                                val item = actionGridList[i]
-                                Card(
-                                    onClick = { onSelectGridFeature(item.title) },
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9)),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 14.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = item.icon,
-                                            contentDescription = item.title,
-                                            tint = item.iconColor,
-                                            modifier = Modifier.size(22.dp)
-                                        )
-                                        Spacer(modifier = Modifier.height(6.dp))
-                                        Text(
-                                            text = item.title,
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = DashboardTextDark
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        for (i in 3..5) {
-                            if (i < actionGridList.size) {
-                                val item = actionGridList[i]
-                                Card(
-                                    onClick = { onSelectGridFeature(item.title) },
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9)),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 14.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = item.icon,
-                                            contentDescription = item.title,
-                                            tint = item.iconColor,
-                                            modifier = Modifier.size(22.dp)
-                                        )
-                                        Spacer(modifier = Modifier.height(6.dp))
-                                        Text(
-                                            text = item.title,
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = DashboardTextDark
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // 6. Recent Reports Header & Item
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Recent Reports",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = DashboardTextDark
-                )
-                Text(
-                    text = "View All",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = DashboardBannerIconBg,
-                    modifier = Modifier.clickable { onViewAllReports() }
-                )
-            }
-        }
-
-        item {
-            // Recent Report Card (Overflowing Public Bin)
-            Card(
-                onClick = {
-                    onSelectReport(
-                        WasteReportItem(
-                            id = "#CDO-2026-0412",
-                            title = "Brgy. Carmen, Purok 2",
-                            barangay = "Carmen",
-                            date = "Today, 8:45 AM",
-                            status = "PENDING"
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(EcoHeaderDark, EcoHeaderGradientEnd)
                         )
                     )
-                },
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
-                modifier = Modifier.fillMaxWidth()
+                    .padding(horizontal = 18.dp, vertical = 20.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    // Profile Row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        StatusBadgeChip(status = "PENDING")
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.2f))
+                                    .border(1.5.dp, Color.White, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = "User Avatar",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
 
-                        Text(
-                            text = "Today, 8:45 AM",
-                            fontSize = 11.sp,
-                            color = DashboardTextMuted
-                        )
+                            Column {
+                                Text(
+                                    text = "Hello, Marai!",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.LocationOn,
+                                        contentDescription = null,
+                                        tint = EcoLimeAccent,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Zone 3, Carmen, CDO",
+                                        fontSize = 11.sp,
+                                        color = Color(0xFFE2E8F0)
+                                    )
+                                }
+                            }
+                        }
+
+                        // Notification Bell with Red Badge
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color.White)
+                                .clickable { onOpenNotifications() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Notifications,
+                                contentDescription = "Notifications",
+                                tint = EcoHeaderDark,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFEF4444))
+                                    .align(Alignment.TopEnd)
+                                    .padding(2.dp)
+                            )
+                        }
                     }
 
-                    Text(
-                        text = "Overflowing Public Bin",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = DashboardTextDark
-                    )
+                    // Eco Impact & eWaste Stats Card
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.12f)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.25f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text("Eco Score & Recycling", fontSize = 11.sp, color = Color(0xFFCBD5E1))
+                                Text("12.5 kg Recycled", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                                Text("🌱 +85 Eco Impact Points", fontSize = 10.sp, color = EcoLimeAccent, fontWeight = FontWeight.Bold)
+                            }
 
-                    Text(
-                        text = "📍 Zone 3, Max Suniel St, Carmen",
-                        fontSize = 12.sp,
-                        color = DashboardTextMuted
-                    )
-
-                    // Map Placeholder Box
-                    MapPreviewBox(heightDp = 100)
+                            Surface(
+                                color = EcoLimeAccent,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    text = "Active Citizen",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = EcoHeaderDark,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
 
+        // Padding container for lower items
         item {
-            Spacer(modifier = Modifier.height(20.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 18.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // 2. Collection Schedule Banner
+                Card(
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = EcoBannerBg),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBFDBFE)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF16A34A)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.VolumeUp,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "CLENRO Collection Schedule for Carmen:",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = EcoTextDark
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "MWF - Biodegradable\nTTHS - Non-Bio",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = EcoTextMuted,
+                                lineHeight = 15.sp
+                            )
+                        }
+
+                        Icon(
+                            imageVector = Icons.Outlined.Info,
+                            contentDescription = null,
+                            tint = Color(0xFF93C5FD),
+                            modifier = Modifier.size(38.dp)
+                        )
+                    }
+                }
+
+                // 3. REPORT UNCOLLECTED WASTE Large Primary Button
+                Card(
+                    onClick = { onOpenNewReport() },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = EcoPrimaryGreen),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 22.dp, horizontal = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(54.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PhotoCamera,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = "REPORT UNCOLLECTED WASTE",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = "Snap photo & auto-attach GPS/Purok",
+                            fontSize = 11.sp,
+                            color = Color(0xFFE2E8F0),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
+                // 4. Quick Status Summary Cards (2 PENDING, 1 ASSIGNED, 5 DONE)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    // Card 1: PENDING
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "2",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color(0xFFEAB308)
+                            )
+                            Text(
+                                text = "PENDING",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = EcoTextMuted
+                            )
+                        }
+                    }
+
+                    // Card 2: ASSIGNED
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "1",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color(0xFF0284C7)
+                            )
+                            Text(
+                                text = "ASSIGNED",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = EcoTextMuted
+                            )
+                        }
+                    }
+
+                    // Card 3: DONE
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "5",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color(0xFF16A34A)
+                            )
+                            Text(
+                                text = "DONE",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = EcoTextMuted
+                            )
+                        }
+                    }
+                }
+
+                // 5. Quick Services Action Feature Grid
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "Quick Services",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = EcoTextDark
+                    )
+
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            for (i in 0..2) {
+                                if (i < actionGridList.size) {
+                                    val item = actionGridList[i]
+                                    Card(
+                                        onClick = { onSelectGridFeature(item.title) },
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9)),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 14.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = item.icon,
+                                                contentDescription = item.title,
+                                                tint = item.iconColor,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Text(
+                                                text = item.title,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = EcoTextDark
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            for (i in 3..5) {
+                                if (i < actionGridList.size) {
+                                    val item = actionGridList[i]
+                                    Card(
+                                        onClick = { onSelectGridFeature(item.title) },
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9)),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 14.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = item.icon,
+                                                contentDescription = item.title,
+                                                tint = item.iconColor,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Text(
+                                                text = item.title,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = EcoTextDark
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 6. Recent Reports Header & Item
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Recent Reports",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = EcoTextDark
+                    )
+                    Text(
+                        text = "View All",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF16A34A),
+                        modifier = Modifier.clickable { onViewAllReports() }
+                    )
+                }
+
+                // Recent Report Card (Overflowing Public Bin)
+                Card(
+                    onClick = {
+                        onSelectReport(
+                            WasteReportItem(
+                                id = "#CDO-2026-0412",
+                                title = "Brgy. Carmen, Purok 2",
+                                barangay = "Carmen",
+                                date = "Today, 8:45 AM",
+                                status = "PENDING"
+                            )
+                        )
+                    },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            StatusBadgeChip(status = "PENDING")
+
+                            Text(
+                                text = "Today, 8:45 AM",
+                                fontSize = 11.sp,
+                                color = EcoTextMuted
+                            )
+                        }
+
+                        Text(
+                            text = "Overflowing Public Bin",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = EcoTextDark
+                        )
+
+                        Text(
+                            text = "📍 Zone 3, Max Suniel St, Carmen",
+                            fontSize = 12.sp,
+                            color = EcoTextMuted
+                        )
+
+                        // Map Placeholder Box
+                        MapPreviewBox(heightDp = 100)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+            }
         }
     }
 }
@@ -938,7 +1021,7 @@ fun NewWasteReportScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = DashboardTextDark
+                        tint = EcoTextDark
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
@@ -946,7 +1029,7 @@ fun NewWasteReportScreen(
                     text = "New Waste Report",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = DashboardTextDark
+                    color = EcoTextDark
                 )
             }
         }
@@ -966,7 +1049,7 @@ fun NewWasteReportScreen(
                         text = "Photo Evidence",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = DashboardTextDark
+                        color = EcoTextDark
                     )
 
                     // Dashed Camera Capture Card
@@ -999,14 +1082,14 @@ fun NewWasteReportScreen(
                                 Icon(
                                     imageVector = Icons.Outlined.PhotoCamera,
                                     contentDescription = null,
-                                    tint = DashboardTextMuted,
+                                    tint = EcoTextMuted,
                                     modifier = Modifier.size(32.dp)
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     text = "Tap camera to capture trash image",
                                     fontSize = 12.sp,
-                                    color = DashboardTextMuted
+                                    color = EcoTextMuted
                                 )
                             }
                         }
@@ -1019,7 +1102,7 @@ fun NewWasteReportScreen(
                 Card(
                     shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
@@ -1030,7 +1113,7 @@ fun NewWasteReportScreen(
                             Icon(
                                 imageVector = Icons.Default.LocationOn,
                                 contentDescription = null,
-                                tint = DashboardGreenPrimary,
+                                tint = EcoPrimaryGreen,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
@@ -1038,14 +1121,14 @@ fun NewWasteReportScreen(
                                 text = "Location Details",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = DashboardTextDark
+                                color = EcoTextDark
                             )
                         }
 
                         // Map Preview Box with Pin
                         MapPreviewBox(heightDp = 110)
 
-                        Text("Barangay", fontSize = 11.sp, color = DashboardTextMuted)
+                        Text("Barangay", fontSize = 11.sp, color = EcoTextMuted)
                         OutlinedTextField(
                             value = barangayInput,
                             onValueChange = { barangayInput = it },
@@ -1056,7 +1139,7 @@ fun NewWasteReportScreen(
                             shape = RoundedCornerShape(10.dp)
                         )
 
-                        Text("Purok / Zone / Street", fontSize = 11.sp, color = DashboardTextMuted)
+                        Text("Purok / Zone / Street", fontSize = 11.sp, color = EcoTextMuted)
                         OutlinedTextField(
                             value = purokInput,
                             onValueChange = { purokInput = it },
@@ -1064,7 +1147,7 @@ fun NewWasteReportScreen(
                             shape = RoundedCornerShape(10.dp)
                         )
 
-                        Text("Optional Landmark", fontSize = 11.sp, color = DashboardTextMuted)
+                        Text("Optional Landmark", fontSize = 11.sp, color = EcoTextMuted)
                         OutlinedTextField(
                             value = landmarkInput,
                             onValueChange = { landmarkInput = it },
@@ -1087,12 +1170,12 @@ fun NewWasteReportScreen(
                             text = "Incident Category",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            color = DashboardTextDark
+                            color = EcoTextDark
                         )
                         Text(
                             text = "Select one",
                             fontSize = 10.sp,
-                            color = DashboardTextMuted
+                            color = EcoTextMuted
                         )
                     }
 
@@ -1135,7 +1218,7 @@ fun NewWasteReportScreen(
                         text = "Additional Remarks",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = DashboardTextDark
+                        color = EcoTextDark
                     )
 
                     OutlinedTextField(
@@ -1173,7 +1256,7 @@ fun NewWasteReportScreen(
                         .fillMaxWidth()
                         .height(52.dp),
                     shape = RoundedCornerShape(26.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = DashboardGreenPrimary)
+                    colors = ButtonDefaults.buttonColors(containerColor = EcoPrimaryGreen)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -1242,7 +1325,7 @@ fun MyReportsScreenContent(
                         modifier = Modifier
                             .size(28.dp)
                             .clip(CircleShape)
-                            .background(DashboardGreenPrimary),
+                            .background(EcoPrimaryGreen),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -1257,7 +1340,7 @@ fun MyReportsScreenContent(
                         text = "CityCare CDO",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = DashboardGreenPrimary
+                        color = EcoPrimaryGreen
                     )
                 }
 
@@ -1266,14 +1349,14 @@ fun MyReportsScreenContent(
                         .size(36.dp)
                         .clip(CircleShape)
                         .background(Color.White)
-                        .border(1.dp, DashboardCardBorder, CircleShape)
+                        .border(1.dp, EcoCardBorder, CircleShape)
                         .clickable { onOpenNotifications() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Notifications,
                         contentDescription = "Notifications",
-                        tint = DashboardTextDark,
+                        tint = EcoTextDark,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -1285,7 +1368,7 @@ fun MyReportsScreenContent(
                 text = "My Reports",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = DashboardTextDark
+                color = EcoTextDark
             )
         }
 
@@ -1301,7 +1384,7 @@ fun MyReportsScreenContent(
                     onValueChange = { searchQuery = it },
                     placeholder = { Text("Search street or ID...", fontSize = 12.sp) },
                     leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = null, tint = DashboardTextMuted)
+                        Icon(Icons.Default.Search, contentDescription = null, tint = EcoTextMuted)
                     },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
@@ -1311,7 +1394,7 @@ fun MyReportsScreenContent(
                 Surface(
                     shape = RoundedCornerShape(12.dp),
                     color = Color.White,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
                     modifier = Modifier
                         .size(52.dp)
                         .clickable { }
@@ -1320,7 +1403,7 @@ fun MyReportsScreenContent(
                         Icon(
                             imageVector = Icons.Default.Tune,
                             contentDescription = "Filter",
-                            tint = DashboardTextDark
+                            tint = EcoTextDark
                         )
                     }
                 }
@@ -1343,14 +1426,14 @@ fun MyReportsScreenContent(
                             text = filter,
                             fontSize = 11.sp,
                             fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold,
-                            color = if (isSelected) DashboardGreenPrimary else DashboardTextMuted
+                            color = if (isSelected) EcoPrimaryGreen else EcoTextMuted
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Box(
                             modifier = Modifier
                                 .width(28.dp)
                                 .height(2.dp)
-                                .background(if (isSelected) DashboardGreenPrimary else Color.Transparent)
+                                .background(if (isSelected) EcoPrimaryGreen else Color.Transparent)
                         )
                     }
                 }
@@ -1363,7 +1446,7 @@ fun MyReportsScreenContent(
                 onClick = { onSelectReport(report) },
                 shape = RoundedCornerShape(14.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
+                border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
@@ -1371,7 +1454,6 @@ fun MyReportsScreenContent(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Image Thumbnail Box
                     ReportImageThumbnail(
                         bitmap = report.imageBitmap,
                         modifier = Modifier
@@ -1392,7 +1474,7 @@ fun MyReportsScreenContent(
                                 text = report.id,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = DashboardTextMuted
+                                color = EcoTextMuted
                             )
                             StatusBadgeChip(status = report.status)
                         }
@@ -1401,7 +1483,7 @@ fun MyReportsScreenContent(
                             text = report.title,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            color = DashboardTextDark,
+                            color = EcoTextDark,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -1409,7 +1491,7 @@ fun MyReportsScreenContent(
                         Text(
                             text = "🕒 ${report.date}",
                             fontSize = 10.sp,
-                            color = DashboardTextMuted
+                            color = EcoTextMuted
                         )
                     }
                 }
@@ -1421,7 +1503,7 @@ fun MyReportsScreenContent(
 }
 
 // -----------------------------------------------------------------------------
-// 4. SUPPORT TAB CONTENT (MATCHING IMAGE 2)
+// 4. SUPPORT TAB CONTENT
 // -----------------------------------------------------------------------------
 @Composable
 fun SupportScreenContent(
@@ -1441,7 +1523,7 @@ fun SupportScreenContent(
         item {
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Agent Illustration & Callout Row (Matching Image 2)
+            // Agent Illustration & Callout Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1449,7 +1531,6 @@ fun SupportScreenContent(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // Support Agent Illustration Box
                 Box(
                     modifier = Modifier
                         .size(110.dp)
@@ -1460,7 +1541,6 @@ fun SupportScreenContent(
                     Canvas(modifier = Modifier.fillMaxSize()) {
                         val w = size.width
                         val h = size.height
-                        // Desk & background element
                         drawRect(color = Color(0xFF3B3B58), topLeft = Offset(w * 0.15f, h * 0.55f), size = androidx.compose.ui.geometry.Size(w * 0.7f, h * 0.35f))
                         drawCircle(color = Color(0xFF2C2C3E), radius = h * 0.22f, center = Offset(w * 0.5f, h * 0.32f))
                     }
@@ -1472,19 +1552,18 @@ fun SupportScreenContent(
                     )
                 }
 
-                // Callout Banner Text
                 Text(
                     text = "Facing issues? Create a ticket for quick resolution!",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = DashboardTextDark,
+                    color = EcoTextDark,
                     lineHeight = 19.sp,
                     modifier = Modifier.weight(1f)
                 )
             }
         }
 
-        // Action Buttons Row: Create Ticket & Call Support (Matching Image 2)
+        // Action Buttons Row: Create Ticket & Call Support
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1524,7 +1603,7 @@ fun SupportScreenContent(
             }
         }
 
-        // Section Header: Complaint History & Year Dropdown (Matching Image 2)
+        // Section Header: Complaint History & Year Dropdown
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1535,12 +1614,12 @@ fun SupportScreenContent(
                     text = "Complaint History",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = DashboardTextDark
+                    color = EcoTextDark
                 )
 
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
                     color = Color.White
                 ) {
                     Row(
@@ -1553,13 +1632,13 @@ fun SupportScreenContent(
                             text = selectedYear,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = DashboardTextDark
+                            color = EcoTextDark
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(
                             imageVector = Icons.Default.ArrowDropDown,
                             contentDescription = null,
-                            tint = DashboardTextMuted,
+                            tint = EcoTextMuted,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -1584,7 +1663,7 @@ fun SupportScreenContent(
                 },
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
+                border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
@@ -1599,19 +1678,19 @@ fun SupportScreenContent(
                             text = "Bin Not Collected on Time",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            color = DashboardTextDark
+                            color = EcoTextDark
                         )
                         Text(
                             text = "Missed Pickup",
                             fontSize = 11.sp,
-                            color = DashboardTextMuted
+                            color = EcoTextMuted
                         )
                     }
 
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = null,
-                        tint = DashboardTextDark,
+                        tint = EcoTextDark,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -1623,7 +1702,7 @@ fun SupportScreenContent(
 }
 
 // -----------------------------------------------------------------------------
-// 5. MORE TAB CONTENT (MATCHING IMAGE 1)
+// 5. MORE TAB CONTENT
 // -----------------------------------------------------------------------------
 @Composable
 fun MoreScreenContent(
@@ -1663,7 +1742,7 @@ fun MoreScreenContent(
                 },
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
+                border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
@@ -1677,13 +1756,13 @@ fun MoreScreenContent(
                         text = title,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        color = DashboardTextDark
+                        color = EcoTextDark
                     )
 
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = null,
-                        tint = DashboardTextDark,
+                        tint = EcoTextDark,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -1695,7 +1774,7 @@ fun MoreScreenContent(
             Card(
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
+                border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
@@ -1709,14 +1788,14 @@ fun MoreScreenContent(
                         text = "App Version",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        color = DashboardTextDark
+                        color = EcoTextDark
                     )
 
                     Text(
                         text = "1.0.1",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = DashboardTextDark
+                        color = EcoTextDark
                     )
                 }
             }
@@ -1727,7 +1806,7 @@ fun MoreScreenContent(
 }
 
 // -----------------------------------------------------------------------------
-// 6. TICKET DETAILS & OTHER SCREENS
+// 6. TICKET DETAILS SCREEN
 // -----------------------------------------------------------------------------
 @Composable
 fun TicketDetailsScreen(
@@ -1741,7 +1820,6 @@ fun TicketDetailsScreen(
             .fillMaxSize()
             .background(Color(0xFFF8FAFC))
     ) {
-        // Top App Bar
         Surface(
             color = Color.White,
             shadowElevation = 2.dp,
@@ -1757,7 +1835,7 @@ fun TicketDetailsScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = DashboardTextDark
+                        tint = EcoTextDark
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
@@ -1765,7 +1843,7 @@ fun TicketDetailsScreen(
                     text = "Ticket Details",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = DashboardGreenPrimary
+                    color = EcoPrimaryGreen
                 )
             }
         }
@@ -1778,14 +1856,13 @@ fun TicketDetailsScreen(
         ) {
             item { Spacer(modifier = Modifier.height(10.dp)) }
 
-            // Ticket Title & Action Buttons
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
                         text = "Ticket ${report.id}",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = DashboardGreenPrimary
+                        color = EcoPrimaryGreen
                     )
 
                     Row(
@@ -1816,16 +1893,14 @@ fun TicketDetailsScreen(
                 }
             }
 
-            // Reported Issue Card
             item {
                 Card(
                     shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        // Image banner with In-Progress badge
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -1857,24 +1932,23 @@ fun TicketDetailsScreen(
                             text = "Reported Issue",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = DashboardTextDark
+                            color = EcoTextDark
                         )
                         Text(
                             text = report.description,
                             fontSize = 11.sp,
-                            color = DashboardTextMuted,
+                            color = EcoTextMuted,
                             lineHeight = 15.sp
                         )
                     }
                 }
             }
 
-            // Location Card
             item {
                 Card(
                     shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1884,7 +1958,7 @@ fun TicketDetailsScreen(
                             Icon(
                                 imageVector = Icons.Default.LocationOn,
                                 contentDescription = null,
-                                tint = DashboardGreenPrimary,
+                                tint = EcoPrimaryGreen,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -1893,12 +1967,12 @@ fun TicketDetailsScreen(
                                     text = "District 1 - ${report.barangay}",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = DashboardTextDark
+                                    color = EcoTextDark
                                 )
                                 Text(
                                     text = report.title,
                                     fontSize = 11.sp,
-                                    color = DashboardTextMuted
+                                    color = EcoTextMuted
                                 )
                             }
                         }
@@ -1906,12 +1980,11 @@ fun TicketDetailsScreen(
                 }
             }
 
-            // Resolution Progress Stepper Card
             item {
                 Card(
                     shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -1924,7 +1997,7 @@ fun TicketDetailsScreen(
                                 text = "Resolution Progress",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = DashboardTextDark
+                                color = EcoTextDark
                             )
 
                             Surface(
@@ -1941,7 +2014,6 @@ fun TicketDetailsScreen(
                             }
                         }
 
-                        // Stepper Timeline
                         TimelineStepItem(
                             stepNumber = 1,
                             title = "Report Submitted",
@@ -1992,8 +2064,8 @@ fun TicketDetailsScreen(
                                         }
                                         Spacer(modifier = Modifier.width(10.dp))
                                         Column {
-                                            Text("Truck #4", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = DashboardTextDark)
-                                            Text("Driver: J. Cruz", fontSize = 10.sp, color = DashboardTextMuted)
+                                            Text("Truck #4", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = EcoTextDark)
+                                            Text("Driver: J. Cruz", fontSize = 10.sp, color = EcoTextMuted)
                                         }
                                     }
                                 }
@@ -2020,7 +2092,6 @@ fun TicketDetailsScreen(
                 }
             }
 
-            // Contact Support Button
             item {
                 OutlinedButton(
                     onClick = { Toast.makeText(context, "Calling CLENRO Hotline (088) 857-3200...", Toast.LENGTH_SHORT).show() },
@@ -2028,7 +2099,7 @@ fun TicketDetailsScreen(
                         .fillMaxWidth()
                         .height(48.dp),
                     shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = DashboardGreenPrimary)
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = EcoPrimaryGreen)
                 ) {
                     Icon(Icons.Default.HeadsetMic, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
@@ -2053,7 +2124,6 @@ fun NotificationsScreen(
             .fillMaxSize()
             .background(Color(0xFFF8FAFC))
     ) {
-        // Header
         Surface(
             color = Color.White,
             shadowElevation = 2.dp,
@@ -2071,7 +2141,7 @@ fun NotificationsScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = DashboardTextDark
+                            tint = EcoTextDark
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
@@ -2079,12 +2149,12 @@ fun NotificationsScreen(
                         text = "Notifications",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = DashboardGreenPrimary
+                        color = EcoPrimaryGreen
                     )
                 }
 
                 Surface(
-                    color = DashboardGreenPrimary,
+                    color = EcoPrimaryGreen,
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
@@ -2112,12 +2182,11 @@ fun NotificationsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("RECENT", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = DashboardTextMuted)
-                    Text("Mark all as read", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = DashboardGreenPrimary)
+                    Text("RECENT", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EcoTextMuted)
+                    Text("Mark all as read", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EcoPrimaryGreen)
                 }
             }
 
-            // Notification Item 1
             item {
                 NotificationCardItem(
                     title = "Your report #CDO-0412 in Zone 3 Carmen was marked RESOLVED.",
@@ -2129,7 +2198,6 @@ fun NotificationsScreen(
                 )
             }
 
-            // Notification Item 2
             item {
                 NotificationCardItem(
                     title = "CLENRO dispatched Truck #4 to your reported location in Lapasan.",
@@ -2141,7 +2209,6 @@ fun NotificationsScreen(
                 )
             }
 
-            // Notification Item 3
             item {
                 NotificationCardItem(
                     title = "Reminder: Schedule change for waste collection in Barangay Macasandig this holiday weekend.",
@@ -2153,7 +2220,6 @@ fun NotificationsScreen(
                 )
             }
 
-            // Notification Item 4
             item {
                 NotificationCardItem(
                     title = "Report #CDO-0401 collection is delayed due to heavy traffic on CM Recto Avenue.",
@@ -2173,7 +2239,7 @@ fun NotificationsScreen(
                         .height(44.dp),
                     shape = RoundedCornerShape(22.dp)
                 ) {
-                    Text("Load More Older Notifications", fontSize = 12.sp, color = DashboardGreenPrimary)
+                    Text("Load More Older Notifications", fontSize = 12.sp, color = EcoPrimaryGreen)
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -2226,7 +2292,6 @@ fun TipsScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Top Header
         Surface(
             color = Color.White,
             modifier = Modifier.fillMaxWidth()
@@ -2241,7 +2306,7 @@ fun TipsScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = DashboardTextDark
+                        tint = EcoTextDark
                     )
                 }
                 Spacer(modifier = Modifier.width(4.dp))
@@ -2249,7 +2314,7 @@ fun TipsScreen(
                     text = "Tips",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = DashboardTextDark
+                    color = EcoTextDark
                 )
             }
         }
@@ -2260,7 +2325,6 @@ fun TipsScreen(
                 .padding(horizontal = 18.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 1. Expert Courtesy Header Card
             item {
                 Row(
                     modifier = Modifier
@@ -2299,13 +2363,13 @@ fun TipsScreen(
                             text = "Dr. Adam Smith, Ph.D.",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = DashboardTextDark
+                            color = EcoTextDark
                         )
 
                         Text(
                             text = "Environmental Engineer & Sustainability Consultant",
                             fontSize = 10.sp,
-                            color = DashboardTextMuted,
+                            color = EcoTextMuted,
                             lineHeight = 14.sp
                         )
 
@@ -2322,7 +2386,6 @@ fun TipsScreen(
                 }
             }
 
-            // 2. Tip Cards List
             items(tipsList) { tip ->
                 Card(
                     onClick = {
@@ -2330,7 +2393,7 @@ fun TipsScreen(
                     },
                     shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -2354,13 +2417,13 @@ fun TipsScreen(
                                 text = tip.title,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = DashboardTextDark
+                                color = EcoTextDark
                             )
 
                             Text(
                                 text = tip.description,
                                 fontSize = 10.sp,
-                                color = DashboardTextMuted,
+                                color = EcoTextMuted,
                                 lineHeight = 14.sp,
                                 maxLines = 3,
                                 overflow = TextOverflow.Ellipsis
@@ -2370,7 +2433,6 @@ fun TipsScreen(
                 }
             }
 
-            // 3. Load More Button
             item {
                 Button(
                     onClick = {
@@ -2427,25 +2489,7 @@ fun TipThumbnailBox(
 }
 
 // -----------------------------------------------------------------------------
-// Helper to decode bitmap from URI
-// -----------------------------------------------------------------------------
-fun loadBitmapFromUri(context: android.content.Context, uri: android.net.Uri): Bitmap? {
-    return try {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-            val source = android.graphics.ImageDecoder.createSource(context.contentResolver, uri)
-            android.graphics.ImageDecoder.decodeBitmap(source)
-        } else {
-            @Suppress("DEPRECATION")
-            android.provider.MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
-}
-
-// -----------------------------------------------------------------------------
-// 9. PROFILE TAB CONTENT (UPDATED WITH EDITABLE PROFILE & COVER BANNER)
+// 9. PROFILE TAB CONTENT
 // -----------------------------------------------------------------------------
 @Composable
 fun ProfileScreenContent(
@@ -2454,13 +2498,11 @@ fun ProfileScreenContent(
 ) {
     val context = LocalContext.current
 
-    // Editable Image Bitmaps & Pickers State
     var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var coverBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var showProfilePicker by remember { mutableStateOf(false) }
     var showCoverPicker by remember { mutableStateOf(false) }
 
-    // Launchers for Profile Image
     val profileGalleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -2477,7 +2519,6 @@ fun ProfileScreenContent(
         }
     }
 
-    // Launchers for Cover Image
     val coverGalleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -2503,7 +2544,6 @@ fun ProfileScreenContent(
         item {
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Header Row: CityCare CDO + Notification Bell
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -2514,7 +2554,7 @@ fun ProfileScreenContent(
                         modifier = Modifier
                             .size(28.dp)
                             .clip(CircleShape)
-                            .background(DashboardGreenPrimary),
+                            .background(EcoPrimaryGreen),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -2529,7 +2569,7 @@ fun ProfileScreenContent(
                         text = "CityCare CDO",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = DashboardGreenPrimary
+                        color = EcoPrimaryGreen
                     )
                 }
 
@@ -2538,33 +2578,31 @@ fun ProfileScreenContent(
                         .size(36.dp)
                         .clip(CircleShape)
                         .background(Color.White)
-                        .border(1.dp, DashboardCardBorder, CircleShape)
+                        .border(1.dp, EcoCardBorder, CircleShape)
                         .clickable { onOpenNotifications() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Notifications,
                         contentDescription = "Notifications",
-                        tint = DashboardTextDark,
+                        tint = EcoTextDark,
                         modifier = Modifier.size(18.dp)
                     )
                 }
             }
         }
 
-        // Profile User Card with Editable Cover Banner & Circular Profile Picture
         item {
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
+                border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Cover Banner Image Container
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -2581,7 +2619,6 @@ fun ProfileScreenContent(
                                 contentScale = ContentScale.Crop
                             )
                         } else {
-                            // Sage Green & Beige overlapping circles pattern
                             Canvas(modifier = Modifier.fillMaxSize()) {
                                 val w = size.width
                                 val h = size.height
@@ -2593,7 +2630,6 @@ fun ProfileScreenContent(
                             }
                         }
 
-                        // Camera / Edit Badge for Cover Photo (Bottom Right Overlay)
                         Surface(
                             onClick = { showCoverPicker = true },
                             shape = RoundedCornerShape(20.dp),
@@ -2622,7 +2658,6 @@ fun ProfileScreenContent(
                             }
                         }
 
-                        // Top-left Back Arrow Button (< in white circle)
                         Surface(
                             onClick = { },
                             shape = CircleShape,
@@ -2637,13 +2672,12 @@ fun ProfileScreenContent(
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                     contentDescription = "Back",
-                                    tint = DashboardTextDark,
+                                    tint = EcoTextDark,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
 
-                        // Top-right Share Button (↗ in white circle)
                         Surface(
                             onClick = { Toast.makeText(context, "Profile link copied!", Toast.LENGTH_SHORT).show() },
                             shape = CircleShape,
@@ -2658,14 +2692,13 @@ fun ProfileScreenContent(
                                 Icon(
                                     imageVector = Icons.Default.Share,
                                     contentDescription = "Share Profile",
-                                    tint = DashboardTextDark,
+                                    tint = EcoTextDark,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
                     }
 
-                    // Overlapping Center Circular Profile Picture with Camera Edit Badge
                     Box(
                         modifier = Modifier
                             .offset(y = (-40).dp)
@@ -2692,12 +2725,11 @@ fun ProfileScreenContent(
                             )
                         }
 
-                        // Camera Badge overlay at bottom-right of avatar
                         Box(
                             modifier = Modifier
                                 .size(26.dp)
                                 .clip(CircleShape)
-                                .background(DashboardGreenPrimary)
+                                .background(EcoPrimaryGreen)
                                 .border(2.dp, Color.White, CircleShape)
                                 .align(Alignment.BottomEnd),
                             contentAlignment = Alignment.Center
@@ -2711,7 +2743,6 @@ fun ProfileScreenContent(
                         }
                     }
 
-                    // User Info Details below Avatar
                     Column(
                         modifier = Modifier
                             .offset(y = (-30).dp)
@@ -2723,19 +2754,19 @@ fun ProfileScreenContent(
                             text = "Maria Santos",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = DashboardTextDark
+                            color = EcoTextDark
                         )
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Email, contentDescription = null, tint = DashboardTextMuted, modifier = Modifier.size(14.dp))
+                            Icon(Icons.Default.Email, contentDescription = null, tint = EcoTextMuted, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(text = "maria.santos@email.com", fontSize = 12.sp, color = DashboardTextMuted)
+                            Text(text = "maria.santos@email.com", fontSize = 12.sp, color = EcoTextMuted)
                         }
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Phone, contentDescription = null, tint = DashboardTextMuted, modifier = Modifier.size(14.dp))
+                            Icon(Icons.Default.Phone, contentDescription = null, tint = EcoTextMuted, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(text = "+63 917 123 4567", fontSize = 12.sp, color = DashboardTextMuted)
+                            Text(text = "+63 917 123 4567", fontSize = 12.sp, color = EcoTextMuted)
                         }
 
                         Spacer(modifier = Modifier.height(2.dp))
@@ -2748,9 +2779,9 @@ fun ProfileScreenContent(
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Default.LocationOn, contentDescription = null, tint = DashboardGreenPrimary, modifier = Modifier.size(14.dp))
+                                Icon(Icons.Default.LocationOn, contentDescription = null, tint = EcoPrimaryGreen, modifier = Modifier.size(14.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(text = "Barangay Carmen, Zone 3", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = DashboardGreenPrimary)
+                                Text(text = "Barangay Carmen, Zone 3", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EcoPrimaryGreen)
                             }
                         }
                     }
@@ -2758,15 +2789,14 @@ fun ProfileScreenContent(
             }
         }
 
-        // ACCOUNT Section
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("ACCOUNT", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = DashboardTextMuted)
+                Text("ACCOUNT", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EcoTextMuted)
 
                 Card(
                     shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column {
@@ -2778,15 +2808,14 @@ fun ProfileScreenContent(
             }
         }
 
-        // PREFERENCES & SECURITY Section
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("PREFERENCES & SECURITY", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = DashboardTextMuted)
+                Text("PREFERENCES & SECURITY", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EcoTextMuted)
 
                 Card(
                     shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column {
@@ -2798,15 +2827,14 @@ fun ProfileScreenContent(
             }
         }
 
-        // SUPPORT Section
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("SUPPORT", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = DashboardTextMuted)
+                Text("SUPPORT", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EcoTextMuted)
 
                 Card(
                     shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DashboardCardBorder),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, EcoCardBorder),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column {
@@ -2818,7 +2846,6 @@ fun ProfileScreenContent(
             }
         }
 
-        // LOGOUT Button
         item {
             TextButton(
                 onClick = onLogout,
@@ -2835,7 +2862,6 @@ fun ProfileScreenContent(
         }
     }
 
-    // Profile Photo Selection Dialog
     if (showProfilePicker) {
         AlertDialog(
             onDismissRequest = { showProfilePicker = false },
@@ -2847,7 +2873,7 @@ fun ProfileScreenContent(
                         showProfilePicker = false
                         profileGalleryLauncher.launch("image/*")
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = DashboardGreenPrimary)
+                    colors = ButtonDefaults.buttonColors(containerColor = EcoPrimaryGreen)
                 ) {
                     Text("Choose from Gallery", fontWeight = FontWeight.Bold)
                 }
@@ -2865,7 +2891,6 @@ fun ProfileScreenContent(
         )
     }
 
-    // Cover Photo Selection Dialog
     if (showCoverPicker) {
         AlertDialog(
             onDismissRequest = { showCoverPicker = false },
@@ -2877,7 +2902,7 @@ fun ProfileScreenContent(
                         showCoverPicker = false
                         coverGalleryLauncher.launch("image/*")
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = DashboardGreenPrimary)
+                    colors = ButtonDefaults.buttonColors(containerColor = EcoPrimaryGreen)
                 ) {
                     Text("Choose from Gallery", fontWeight = FontWeight.Bold)
                 }
@@ -2899,6 +2924,21 @@ fun ProfileScreenContent(
 // -----------------------------------------------------------------------------
 // HELPER COMPOSABLES
 // -----------------------------------------------------------------------------
+fun loadBitmapFromUri(context: android.content.Context, uri: android.net.Uri): Bitmap? {
+    return try {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            val source = android.graphics.ImageDecoder.createSource(context.contentResolver, uri)
+            android.graphics.ImageDecoder.decodeBitmap(source)
+        } else {
+            @Suppress("DEPRECATION")
+            android.provider.MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
+
 @Composable
 fun StatusBadgeChip(status: String) {
     val (bgColor, textColor) = when (status) {
@@ -2930,18 +2970,18 @@ fun CategoryChip(
 ) {
     Surface(
         onClick = onClick,
-        color = if (selected) DashboardGreenPrimary else Color.White,
+        color = if (selected) EcoPrimaryGreen else Color.White,
         shape = RoundedCornerShape(20.dp),
         border = androidx.compose.foundation.BorderStroke(
             width = 1.dp,
-            color = if (selected) DashboardGreenPrimary else Color(0xFFCBD5E1)
+            color = if (selected) EcoPrimaryGreen else Color(0xFFCBD5E1)
         )
     ) {
         Text(
             text = label,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            color = if (selected) Color.White else DashboardTextDark,
+            color = if (selected) Color.White else EcoTextDark,
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
         )
     }
@@ -2981,7 +3021,7 @@ fun MapPreviewBox(heightDp: Int) {
             Icon(
                 imageVector = Icons.Default.LocationOn,
                 contentDescription = null,
-                tint = DashboardGreenPrimary,
+                tint = EcoPrimaryGreen,
                 modifier = Modifier.size(28.dp)
             )
         }
@@ -2998,7 +3038,7 @@ fun MapPreviewBox(heightDp: Int) {
                 text = "GPS Active",
                 fontSize = 9.sp,
                 fontWeight = FontWeight.Bold,
-                color = DashboardGreenPrimary,
+                color = EcoPrimaryGreen,
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
             )
         }
@@ -3060,7 +3100,7 @@ fun TimelineStepItem(
                     .clip(CircleShape)
                     .background(
                         when {
-                            isCompleted -> DashboardGreenPrimary
+                            isCompleted -> EcoPrimaryGreen
                             isCurrent -> Color(0xFF0284C7)
                             else -> Color(0xFFE2E8F0)
                         }
@@ -3089,7 +3129,7 @@ fun TimelineStepItem(
                     modifier = Modifier
                         .width(2.dp)
                         .height(38.dp)
-                        .background(if (isCompleted) DashboardGreenPrimary else Color(0xFFE2E8F0))
+                        .background(if (isCompleted) EcoPrimaryGreen else Color(0xFFE2E8F0))
                 )
             }
         }
@@ -3099,13 +3139,13 @@ fun TimelineStepItem(
                 text = title,
                 fontSize = 12.sp,
                 fontWeight = if (isCompleted || isCurrent) FontWeight.Bold else FontWeight.Normal,
-                color = if (isCompleted || isCurrent) DashboardTextDark else DashboardTextMuted
+                color = if (isCompleted || isCurrent) EcoTextDark else EcoTextMuted
             )
             if (subtitle.isNotEmpty()) {
                 Text(
                     text = subtitle,
                     fontSize = 10.sp,
-                    color = DashboardTextMuted
+                    color = EcoTextMuted
                 )
             }
             extraContent?.invoke()
@@ -3127,7 +3167,7 @@ fun NotificationCardItem(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            if (borderColor != Color.Transparent) borderColor else DashboardCardBorder
+            if (borderColor != Color.Transparent) borderColor else EcoCardBorder
         ),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -3159,13 +3199,13 @@ fun NotificationCardItem(
                     text = title,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = DashboardTextDark,
+                    color = EcoTextDark,
                     lineHeight = 16.sp
                 )
                 Text(
                     text = time,
                     fontSize = 10.sp,
-                    color = DashboardTextMuted
+                    color = EcoTextMuted
                 )
             }
         }
@@ -3196,7 +3236,7 @@ fun ProfileMenuRow(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = DashboardGreenPrimary,
+                    tint = EcoPrimaryGreen,
                     modifier = Modifier.size(16.dp)
                 )
             }
@@ -3205,14 +3245,14 @@ fun ProfileMenuRow(
                 text = title,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
-                color = DashboardTextDark
+                color = EcoTextDark
             )
         }
 
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
-            tint = DashboardTextMuted,
+            tint = EcoTextMuted,
             modifier = Modifier.size(18.dp)
         )
     }

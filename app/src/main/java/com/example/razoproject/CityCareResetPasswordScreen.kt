@@ -1,7 +1,6 @@
 package com.example.razoproject
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,10 +27,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Design System Colors matching Figma Reset Password Screen
-val ResetCardBg = Color(0xFFF0F4F9)
+// Design System Colors matching Reset Password Screen
+val ResetCardBg = Color(0xFFF8FAFC)
 val ResetBorderColor = Color(0xFFCBD5E1)
-val ResetGreenPrimary = Color(0xFF1E3A2B)
+val ResetGreenPrimary = Color(0xFF1E7A38)
 val ResetTextDark = Color(0xFF1E293B)
 val ResetTextMuted = Color(0xFF64748B)
 
@@ -42,7 +41,7 @@ fun CityCareResetPasswordScreen(
     onResetSuccess: () -> Unit = {}
 ) {
     var emailOrPhone by remember { mutableStateOf("") }
-    var otpDigits = remember { mutableStateListOf("", "", "", "", "", "") }
+    val otpDigits = remember { mutableStateListOf("", "", "", "", "", "") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var isNewPassVisible by remember { mutableStateOf(false) }
@@ -84,7 +83,7 @@ fun CityCareResetPasswordScreen(
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(CircleShape)
-                                    .background(Color(0xFFEBF2FA))
+                                    .background(Color(0xFFDCFCE7))
                                     .clickable { onBackClick() },
                                 contentAlignment = Alignment.Center
                             ) {
@@ -98,13 +97,13 @@ fun CityCareResetPasswordScreen(
 
                             Column {
                                 Text(
-                                    text = "utroha imongpassword ",
+                                    text = "Reset Password",
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = ResetGreenPrimary
                                 )
                                 Text(
-                                    text = "Recover your CityCare CDO kay bugok man !",
+                                    text = "Recover your CityCare CDO resident account",
                                     fontSize = 12.sp,
                                     color = ResetTextMuted
                                 )
@@ -113,7 +112,7 @@ fun CityCareResetPasswordScreen(
 
                         // Top Progress Bar
                         LinearProgressIndicator(
-                            progress = { 0.4f },
+                            progress = { 0.5f },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(6.dp)
@@ -142,7 +141,7 @@ fun CityCareResetPasswordScreen(
                         // 1. Email or Phone Input
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text(
-                                text = "Email or Phone Number nimo lisod pod og iya nga imo maning cp",
+                                text = "Email or Phone Number",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = ResetTextDark
@@ -155,7 +154,7 @@ fun CityCareResetPasswordScreen(
                                 },
                                 placeholder = {
                                     Text(
-                                        text = "e.g. juan@kagayan.ph or 0917...(example rani kubayahon napod nimo ni rom ",
+                                        text = "e.g. juan@kagayan.ph or 0917 123 4567",
                                         fontSize = 12.sp,
                                         color = ResetTextMuted
                                     )
@@ -165,9 +164,9 @@ fun CityCareResetPasswordScreen(
                                 shape = RoundedCornerShape(10.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = ResetGreenPrimary,
-                                    unfocusedBorderColor = Color.Transparent,
-                                    focusedContainerColor = ResetCardBg,
-                                    unfocusedContainerColor = ResetCardBg
+                                    unfocusedBorderColor = Color(0xFFCBD5E1),
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color.White
                                 )
                             )
                         }
@@ -181,7 +180,7 @@ fun CityCareResetPasswordScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "Enter Verification Code ayaw patakag butang number dana mag txt ra me pag hulat  ",
+                                text = "Enter Verification Code",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = ResetTextDark
@@ -219,9 +218,9 @@ fun CityCareResetPasswordScreen(
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                         colors = OutlinedTextFieldDefaults.colors(
                                             focusedBorderColor = ResetGreenPrimary,
-                                            unfocusedBorderColor = Color.Transparent,
-                                            focusedContainerColor = ResetCardBg,
-                                            unfocusedContainerColor = ResetCardBg
+                                            unfocusedBorderColor = Color(0xFFCBD5E1),
+                                            focusedContainerColor = Color.White,
+                                            unfocusedContainerColor = Color.White
                                         )
                                     )
                                 }
@@ -279,9 +278,9 @@ fun CityCareResetPasswordScreen(
                                 shape = RoundedCornerShape(10.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = ResetGreenPrimary,
-                                    unfocusedBorderColor = Color.Transparent,
-                                    focusedContainerColor = ResetCardBg,
-                                    unfocusedContainerColor = ResetCardBg
+                                    unfocusedBorderColor = Color(0xFFCBD5E1),
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color.White
                                 )
                             )
                         }
@@ -318,9 +317,9 @@ fun CityCareResetPasswordScreen(
                                 shape = RoundedCornerShape(10.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = ResetGreenPrimary,
-                                    unfocusedBorderColor = Color.Transparent,
-                                    focusedContainerColor = ResetCardBg,
-                                    unfocusedContainerColor = ResetCardBg
+                                    unfocusedBorderColor = Color(0xFFCBD5E1),
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color.White
                                 )
                             )
                         }
@@ -332,7 +331,7 @@ fun CityCareResetPasswordScreen(
                             onClick = {
                                 when {
                                     emailOrPhone.trim().isEmpty() -> {
-                                        errorMessage = "Please enter your Email or Phone Number! pag dali"
+                                        errorMessage = "Please enter your Email or Phone Number!"
                                     }
                                     newPassword.trim().isEmpty() -> {
                                         errorMessage = "Please enter a new password!"
@@ -349,7 +348,7 @@ fun CityCareResetPasswordScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(48.dp),
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(24.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = ResetGreenPrimary,
                                 contentColor = Color.White

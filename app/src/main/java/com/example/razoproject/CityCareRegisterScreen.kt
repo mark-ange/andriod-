@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -26,9 +25,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Figma Registration Screen Styling
-val RegGreenPrimary = Color(0xFF1E3A2B)
-val RegCardBg = Color(0xFFF0F4F9)
+// Registration Screen Styling matching Eco UI
+val RegGreenPrimary = Color(0xFF1E7A38)
+val RegCardBg = Color(0xFFF8FAFC)
 val RegBorderColor = Color(0xFFCBD5E1)
 val RegTextDark = Color(0xFF1E293B)
 val RegTextMuted = Color(0xFF64748B)
@@ -132,7 +131,7 @@ fun CityCareRegisterScreen(
 
                         // SECTION 1: Personal Information
                         Text(
-                            text = "Personal Information imo ning info waah ka",
+                            text = "Personal Information",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = RegTextDark
@@ -140,22 +139,22 @@ fun CityCareRegisterScreen(
 
                         // Full Name
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(text = "Full Name? fullname ngani pati pag basa bungol ", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = RegTextDark)
+                            Text(text = "Full Name", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = RegTextDark)
                             OutlinedTextField(
                                 value = fullName,
                                 onValueChange = {
                                     fullName = it
                                     errorMessage = null
                                 },
-                                placeholder = { Text("Juan Dela Cruz(example basin wla paka ka ila sa imo ngalan)", fontSize = 12.sp, color = RegTextMuted) },
+                                placeholder = { Text("Juan Dela Cruz", fontSize = 12.sp, color = RegTextMuted) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true,
                                 shape = RoundedCornerShape(10.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = RegGreenPrimary,
-                                    unfocusedBorderColor = Color.Transparent,
-                                    focusedContainerColor = RegCardBg,
-                                    unfocusedContainerColor = RegCardBg
+                                    unfocusedBorderColor = Color(0xFFCBD5E1),
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color.White
                                 )
                             )
                         }
@@ -176,9 +175,9 @@ fun CityCareRegisterScreen(
                                 shape = RoundedCornerShape(10.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = RegGreenPrimary,
-                                    unfocusedBorderColor = Color.Transparent,
-                                    focusedContainerColor = RegCardBg,
-                                    unfocusedContainerColor = RegCardBg
+                                    unfocusedBorderColor = Color(0xFFCBD5E1),
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color.White
                                 )
                             )
                         }
@@ -196,9 +195,9 @@ fun CityCareRegisterScreen(
                                 shape = RoundedCornerShape(10.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = RegGreenPrimary,
-                                    unfocusedBorderColor = Color.Transparent,
-                                    focusedContainerColor = RegCardBg,
-                                    unfocusedContainerColor = RegCardBg
+                                    unfocusedBorderColor = Color(0xFFCBD5E1),
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color.White
                                 )
                             )
                         }
@@ -245,9 +244,9 @@ fun CityCareRegisterScreen(
                                     shape = RoundedCornerShape(10.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
                                         focusedBorderColor = RegGreenPrimary,
-                                        unfocusedBorderColor = Color.Transparent,
-                                        focusedContainerColor = RegCardBg,
-                                        unfocusedContainerColor = RegCardBg
+                                        unfocusedBorderColor = Color(0xFFCBD5E1),
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White
                                     )
                                 )
                                 ExposedDropdownMenu(
@@ -279,9 +278,9 @@ fun CityCareRegisterScreen(
                                 shape = RoundedCornerShape(10.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = RegGreenPrimary,
-                                    unfocusedBorderColor = Color.Transparent,
-                                    focusedContainerColor = RegCardBg,
-                                    unfocusedContainerColor = RegCardBg
+                                    unfocusedBorderColor = Color(0xFFCBD5E1),
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color.White
                                 )
                             )
                         }
@@ -313,9 +312,9 @@ fun CityCareRegisterScreen(
                                 shape = RoundedCornerShape(10.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = RegGreenPrimary,
-                                    unfocusedBorderColor = Color.Transparent,
-                                    focusedContainerColor = RegCardBg,
-                                    unfocusedContainerColor = RegCardBg
+                                    unfocusedBorderColor = Color(0xFFCBD5E1),
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color.White
                                 )
                             )
                         }
@@ -337,9 +336,9 @@ fun CityCareRegisterScreen(
                                 shape = RoundedCornerShape(10.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = RegGreenPrimary,
-                                    unfocusedBorderColor = Color.Transparent,
-                                    focusedContainerColor = RegCardBg,
-                                    unfocusedContainerColor = RegCardBg
+                                    unfocusedBorderColor = Color(0xFFCBD5E1),
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color.White
                                 )
                             )
                         }
