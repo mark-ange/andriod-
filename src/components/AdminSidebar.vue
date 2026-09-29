@@ -28,15 +28,23 @@
     <span>Tickets</span>
   </router-link>
 
-  <button class="nav-item">
-    <span class="icon">▣</span>
-    <span>Fleet</span>
-  </button>
+  <router-link
+  to="/fleet"
+  class="nav-item"
+  active-class="active"
+>
+  <span class="icon">▣</span>
+  <span>Fleet</span>
+</router-link>
 
-  <button class="nav-item">
-    <span class="icon">⌖</span>
-    <span>Barangays</span>
-  </button>
+  <router-link
+  to="/barangays"
+  class="nav-item"
+  active-class="active"
+>
+  <span class="icon">⌖</span>
+  <span>Barangays</span>
+</router-link>
 
   <button class="nav-item">
     <span class="icon">▥</span>
