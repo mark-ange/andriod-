@@ -2,6 +2,7 @@ package com.example.razoproject
 
 import android.graphics.Bitmap
 import android.widget.Toast
+import kotlinx.coroutines.launch
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
@@ -916,6 +917,7 @@ fun NewWasteReportScreen(
     onSubmit: (WasteReportItem) -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var capturedPhotoBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var selectedCategory by remember { mutableStateOf("Illegal Dump Site") }
     var barangayInput by remember { mutableStateOf("Carmen") }
@@ -1200,6 +1202,19 @@ fun NewWasteReportScreen(
                             landmark = landmarkInput,
                             imageBitmap = capturedPhotoBitmap
                         )
+                        val reportData = ReportItemData(
+                            id = newId,
+                            title = "Brgy. $barangayInput, $purokInput",
+                            location = "$barangayInput, Cagayan de Oro City",
+                            status = "PENDING",
+                            time = "Today, Just Now",
+                            unitAssigned = "Unassigned",
+                            photoBitmap = capturedPhotoBitmap,
+                            gpsCoordinates = "8.4822° N, 124.6175° E"
+                        )
+                        kotlinx.coroutines.GlobalScope.launch {
+                            CityCareApiService.uploadReportToCloud(reportData)
+                        }
                         Toast.makeText(context, "Incident Report Submitted!", Toast.LENGTH_SHORT).show()
                         onSubmit(newReport)
                     },
@@ -2888,51 +2903,29 @@ fun NavTabItemComposable(
     Surface(
         onClick = onClick,
         color = if (isSelected) EcoHomeTabYellow else Color.Transparent,
-        shape = RoundedCornerShape(22.dp)
+        shape = RoundedCornerShape(16.dp)
     ) {
-        if (isSelected) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-            ) {
-                Icon(
-                    imageVector = activeIcon,
-                    contentDescription = label,
-                    tint = EcoTextDark,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = label,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = EcoTextDark,
-                    maxLines = 1,
-                    softWrap = false
-                )
-            }
-        } else {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-            ) {
-                Icon(
-                    imageVector = inactiveIcon,
-                    contentDescription = label,
-                    tint = EcoTextMuted,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = label,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = EcoTextMuted,
-                    maxLines = 1,
-                    softWrap = false
-                )
-            }
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+        ) {
+            Icon(
+                imageVector = if (isSelected) activeIcon else inactiveIcon,
+                contentDescription = label,
+                tint = EcoTextDark,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = label,
+                fontSize = 11.sp,
+                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
+                color = if (isSelected) EcoTextDark else EcoTextMuted,
+                maxLines = 1,
+                softWrap = false,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
