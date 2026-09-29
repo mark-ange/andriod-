@@ -46,18 +46,26 @@
   <span>Barangays</span>
 </router-link>
 
-  <button class="nav-item">
-    <span class="icon">▥</span>
-    <span>Reports</span>
-  </button>
+  <router-link
+  to="/reports"
+  class="nav-item"
+  active-class="active"
+>
+  <span class="icon">▥</span>
+  <span>Reports</span>
+</router-link>
 
 </nav>
 
     <!-- Bottom -->
-    <button class="nav-item settings">
-      <span class="icon">⚙</span>
-      <span>Settings</span>
-    </button>
+<router-link
+  to="/settings"
+  class="nav-item"
+  active-class="active"
+>
+  <span class="icon">⚙</span>
+  <span>Settings</span>
+</router-link>
 
   </aside>
 </template>

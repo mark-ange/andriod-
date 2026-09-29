@@ -4,6 +4,8 @@ import Dashboard from '../views/Dashboard.vue'
 import Tickets from '../views/Tickets.vue'
 import Fleet from '../views/Fleet.vue'
 import Barangays from '../views/Barangays.vue'
+import Reports from '../views/Reports.vue'
+import Settings from '../views/Settings.vue'
 
 const routes = [
   {
@@ -32,6 +34,16 @@ const routes = [
   path: '/barangays',
   name: 'Barangays',
   component: Barangays
+},
+{
+  path: '/reports',
+  name: 'Reports',
+  component: Reports
+},
+{
+  path: '/settings',
+  name: 'Settings',
+  component: Settings
 }
 ]
 
