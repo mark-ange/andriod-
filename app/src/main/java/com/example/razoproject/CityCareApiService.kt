@@ -1,61 +1,41 @@
 package com.example.razoproject
 
-import kotlinx.coroutines.delay
-import java.io.OutputStreamWriter
-import java.net.HttpURLConnection
-import java.net.URL
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 /**
- * Online Cloud Service for CityCare Iponan Barangay Citizen Portal.
- * Handles online report uploads, GPS location sync, and live cloud database storage.
+ * Online Cloud Service for CityCare CDO Barangay Citizen Portal.
+ * Handles online report uploads, GPS location sync, and live Cloud Firestore database storage (`citycarecdo`).
  */
 object CityCareApiService {
 
-    const val CLOUD_SERVER_URL = "https://citycare-iponan-default-rtdb.firebaseio.com/reports.json"
+    private val db: FirebaseFirestore get() = FirebaseFirestore.getInstance()
 
     var isOnline: Boolean = true
 
     /**
-     * Uploads citizen waste concern report with GPS coordinates and photo metadata to the online cloud server.
+     * Uploads citizen report with GPS coordinates and metadata to Cloud Firestore (`reports` collection).
      */
     suspend fun uploadReportToCloud(report: ReportItemData): Boolean {
-        // Simulate network latency for cloud sync
-        delay(1200)
-
         return try {
-            val url = URL(CLOUD_SERVER_URL)
-            val connection = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "POST"
-                doOutput = true
-                setRequestProperty("Content-Type", "application/json")
-                connectTimeout = 5000
-                readTimeout = 5000
-            }
+            val reportData = hashMapOf(
+                "reportId" to report.id,
+                "title" to report.title,
+                "location" to report.location,
+                "gpsCoordinates" to (report.gpsCoordinates ?: "N/A"),
+                "status" to report.status,
+                "timestamp" to report.time,
+                "unitAssigned" to report.unitAssigned,
+                "hasPhotoProof" to (report.photoBitmap != null),
+                "createdAt" to System.currentTimeMillis(),
+            )
 
-            val jsonPayload = """
-                {
-                    "reportId": "${report.id}",
-                    "title": "${report.title.replace("\"", "\\\"")}",
-                    "location": "${report.location.replace("\"", "\\\"")}",
-                    "gpsCoordinates": "${report.gpsCoordinates ?: "N/A"}",
-                    "status": "${report.status}",
-                    "timestamp": "${report.time}",
-                    "unitAssigned": "${report.unitAssigned}",
-                    "hasPhotoProof": ${report.photoBitmap != null}
-                }
-            """.trimIndent()
-
-            OutputStreamWriter(connection.outputStream).use { writer ->
-                writer.write(jsonPayload)
-                writer.flush()
-            }
-
-            val responseCode = connection.responseCode
-            connection.disconnect()
-            responseCode in 200..299 || responseCode == 404 // Success or online fallback
+            db.collection("reports").document(report.id).set(reportData).await()
+            true
         } catch (e: Exception) {
             e.printStackTrace()
-            true // Graceful fallback for offline/demo environment
+            // Graceful fallback if offline
+            true
         }
     }
 
@@ -63,7 +43,19 @@ object CityCareApiService {
      * Syncs new resident registration to the online Barangay database.
      */
     suspend fun registerCitizenOnline(account: CitizenAccount): Boolean {
-        delay(1000)
-        return true
+        return try {
+            val userData = hashMapOf(
+                "name" to account.name,
+                "purok" to account.purok,
+                "identifier" to account.identifier,
+                "isOfficial" to account.isOfficial,
+                "registeredAt" to System.currentTimeMillis()
+            )
+            db.collection("registered_citizens").document(account.identifier).set(userData).await()
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            true
+        }
     }
 }

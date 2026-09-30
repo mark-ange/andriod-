@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -25,6 +26,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.CustomCredential
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import kotlinx.coroutines.launch
 
 // Figma Color Palette
 val FigmaGreenButton = Color(0xFF1E3A2B)
@@ -41,6 +48,8 @@ fun CityCareLoginScreen(
     onRegisterClick: () -> Unit = {},
     onForgotPasswordClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var selectedTab by remember { mutableIntStateOf(0) } // 0: Sign in, 1: Full Register
 
     // Sign In State
@@ -48,7 +57,7 @@ fun CityCareLoginScreen(
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
 
-    // Register State (Full Personal Info, Location, Security)
+    // Register State
     var regFullName by remember { mutableStateOf("") }
     var regPhoneNumber by remember { mutableStateOf("") }
     var regEmailOptional by remember { mutableStateOf("") }
@@ -61,6 +70,7 @@ fun CityCareLoginScreen(
 
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
 
     val barangayList = listOf("Iponan", "Bulua", "Canitoan", "Carmen", "Patag", "Kauswagan")
 
@@ -77,7 +87,7 @@ fun CityCareLoginScreen(
             item {
                 Spacer(modifier = Modifier.height(28.dp))
 
-                // 1. App Title (CityCare / CityCare CDO)
+                // 1. App Title
                 Text(
                     text = if (selectedTab == 1) "CityCare CDO" else "CityCare",
                     fontSize = 30.sp,
@@ -99,7 +109,7 @@ fun CityCareLoginScreen(
 
                 Spacer(modifier = Modifier.height(18.dp))
 
-                // 2. Segmented Pill Tab Bar ("Sign up" vs "Register")
+                // 2. Segmented Pill Tab Bar
                 Surface(
                     color = FigmaTabBg,
                     shape = RoundedCornerShape(12.dp),
@@ -195,6 +205,11 @@ fun CityCareLoginScreen(
                     Spacer(modifier = Modifier.height(14.dp))
                 }
 
+                if (isLoading) {
+                    CircularProgressIndicator(color = FigmaGreenButton)
+                    Spacer(modifier = Modifier.height(14.dp))
+                }
+
                 // TAB 0: SIGN IN FORM
                 if (selectedTab == 0) {
                     Column(
@@ -215,7 +230,7 @@ fun CityCareLoginScreen(
                                     emailAddress = it
                                     errorMessage = null
                                 },
-                                placeholder = { Text("Your email or resident ID", fontSize = 13.sp, color = FigmaTextMuted) },
+                                placeholder = { Text("Your email address", fontSize = 13.sp, color = FigmaTextMuted) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -280,21 +295,31 @@ fun CityCareLoginScreen(
                             )
                         }
 
-                        // Primary Sign In Button
+                        // Primary Sign In Button (Firebase Auth)
                         Button(
                             onClick = {
                                 val cleanEmail = emailAddress.trim()
                                 val cleanPass = password.trim()
 
-                                if (cleanEmail.isEmpty()) {
-                                    errorMessage = "Please enter your Email address or Resident ID!"
-                                } else if (cleanPass.isEmpty()) {
-                                    errorMessage = "Please enter your Password!"
-                                } else {
-                                    errorMessage = null
-                                    onLoginSuccess()
+                                when {
+                                    cleanEmail.isEmpty() -> errorMessage = "Please enter your Email address!"
+                                    cleanPass.isEmpty() -> errorMessage = "Please enter your Password!"
+                                    else -> {
+                                        errorMessage = null
+                                        isLoading = true
+                                        coroutineScope.launch {
+                                            val result = FirebaseAuthRepository.signInWithEmail(cleanEmail, cleanPass)
+                                            isLoading = false
+                                            if (result.isSuccess) {
+                                                onLoginSuccess()
+                                            } else {
+                                                errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Sign-in failed."
+                                            }
+                                        }
+                                    }
                                 }
                             },
+                            enabled = !isLoading,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(50.dp),
@@ -328,29 +353,48 @@ fun CityCareLoginScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(Color(0xFF1877F2))
-                                        .clickable { onLoginSuccess() },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "f",
-                                        color = Color.White,
-                                        fontSize = 24.sp,
-                                        fontWeight = FontWeight.ExtraBold
-                                    )
-                                }
-
+                                // Google Sign In Button
                                 Box(
                                     modifier = Modifier
                                         .size(40.dp)
                                         .clip(CircleShape)
                                         .border(1.dp, Color(0xFFE2E8F0), CircleShape)
                                         .background(Color.White)
-                                        .clickable { onLoginSuccess() },
+                                        .clickable {
+                                            coroutineScope.launch {
+                                                try {
+                                                    val credentialManager = CredentialManager.create(context)
+                                                    val googleIdOption = GetGoogleIdOption.Builder()
+                                                        .setFilterByAuthorizedAccounts(false)
+                                                        .setServerClientId("705374451507-oii7ck2c6nduelsjtkpu4240anniqhp7.apps.googleusercontent.com")
+                                                        .setAutoSelectEnabled(false)
+                                                        .build()
+
+                                                    val request = GetCredentialRequest.Builder()
+                                                        .addCredentialOption(googleIdOption)
+                                                        .build()
+
+                                                    isLoading = true
+                                                    val result = credentialManager.getCredential(context = context, request = request)
+                                                    val cred = result.credential
+                                                    if ((cred is CustomCredential) && (cred.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL)) {
+                                                        val googleIdToken = GoogleIdTokenCredential.createFrom(cred.data)
+                                                        val authRes = FirebaseAuthRepository.signInWithGoogleToken(googleIdToken.idToken)
+                                                        isLoading = false
+                                                        if (authRes.isSuccess) {
+                                                            onLoginSuccess()
+                                                        } else {
+                                                            errorMessage = authRes.exceptionOrNull()?.localizedMessage ?: "Google sign-in failed."
+                                                        }
+                                                    } else {
+                                                        isLoading = false
+                                                    }
+                                                } catch (e: Exception) {
+                                                    isLoading = false
+                                                    errorMessage = e.localizedMessage ?: "Google Sign-In canceled or unsupported."
+                                                }
+                                            }
+                                        },
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
@@ -361,12 +405,13 @@ fun CityCareLoginScreen(
                                     )
                                 }
 
+                                // Guest / Anonymous Report Option
                                 Box(
                                     modifier = Modifier
                                         .size(40.dp)
                                         .clip(CircleShape)
                                         .background(FigmaGreenButton)
-                                        .clickable { onLoginSuccess() },
+                                        .clickable { onAnonymousReport() },
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
@@ -380,7 +425,7 @@ fun CityCareLoginScreen(
                         }
                     }
                 } else {
-                    // TAB 1: FULL REGISTRATION FORM (MATCHING FIGMA IMAGE 100%)
+                    // TAB 1: FULL REGISTRATION FORM (CONNECTED TO FIREBASE)
                     Card(
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -394,7 +439,6 @@ fun CityCareLoginScreen(
                                 .padding(18.dp),
                             verticalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
-                            // SECTION 1: Personal Information
                             Text(
                                 text = "Personal Information",
                                 fontSize = 13.sp,
@@ -445,9 +489,9 @@ fun CityCareLoginScreen(
                                 )
                             }
 
-                            // Email (Optional)
+                            // Email
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(text = "Email (Optional)", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = FigmaTextMuted)
+                                Text(text = "Email Address", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = FigmaTextMuted)
                                 OutlinedTextField(
                                     value = regEmailOptional,
                                     onValueChange = { regEmailOptional = it },
@@ -466,7 +510,7 @@ fun CityCareLoginScreen(
 
                             HorizontalDivider(color = Color(0xFFF1F5F9))
 
-                            // SECTION 2: Location
+                            // Location
                             Text(
                                 text = "Location",
                                 fontSize = 13.sp,
@@ -474,7 +518,7 @@ fun CityCareLoginScreen(
                                 color = FigmaTextDark
                             )
 
-                            // Select Barangay
+                            // Barangay Dropdown
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(text = "Select Barangay", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = FigmaTextMuted)
                                 ExposedDropdownMenuBox(
@@ -527,7 +571,7 @@ fun CityCareLoginScreen(
                                 }
                             }
 
-                            // Default Purok / Zone / Street
+                            // Purok / Zone
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(text = "Default Purok / Zone / Street", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = FigmaTextMuted)
                                 OutlinedTextField(
@@ -547,7 +591,7 @@ fun CityCareLoginScreen(
 
                             HorizontalDivider(color = Color(0xFFF1F5F9))
 
-                            // SECTION 3: Security
+                            // Security
                             Text(
                                 text = "Security",
                                 fontSize = 13.sp,
@@ -601,7 +645,7 @@ fun CityCareLoginScreen(
                                 )
                             }
 
-                            // Terms & Privacy Checkbox
+                            // Terms Checkbox
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.clickable { regAgreeTerms = !regAgreeTerms }
@@ -619,31 +663,44 @@ fun CityCareLoginScreen(
                                 )
                             }
 
-                            // CREATE ACCOUNT BUTTON
+                            // CREATE ACCOUNT BUTTON (FIREBASE AUTH & FIRESTORE)
                             Button(
                                 onClick = {
+                                    val cleanFullName = regFullName.trim()
+                                    val cleanPhone = regPhoneNumber.trim()
+                                    val cleanEmail = regEmailOptional.trim()
+                                    val cleanPass = regPassword.trim()
+
                                     when {
-                                        regFullName.trim().isEmpty() -> {
-                                            errorMessage = "Please enter your Full Name!"
-                                        }
-                                        regPhoneNumber.trim().isEmpty() -> {
-                                            errorMessage = "Please enter your Phone Number!"
-                                        }
-                                        regPassword.trim().isEmpty() -> {
-                                            errorMessage = "Please enter a Password!"
-                                        }
-                                        regPassword != regConfirmPassword -> {
-                                            errorMessage = "Passwords do not match!"
-                                        }
-                                        !regAgreeTerms -> {
-                                            errorMessage = "Please agree to the Terms of Service & Privacy Policy!"
-                                        }
+                                        cleanFullName.isEmpty() -> errorMessage = "Please enter your Full Name!"
+                                        cleanPhone.isEmpty() -> errorMessage = "Please enter your Phone Number!"
+                                        cleanEmail.isEmpty() -> errorMessage = "Please enter an Email Address for authentication!"
+                                        cleanPass.isEmpty() -> errorMessage = "Please enter a Password!"
+                                        cleanPass != regConfirmPassword -> errorMessage = "Passwords do not match!"
+                                        !regAgreeTerms -> errorMessage = "Please agree to the Terms of Service & Privacy Policy!"
                                         else -> {
                                             errorMessage = null
-                                            onRegisterClick()
+                                            isLoading = true
+                                            coroutineScope.launch {
+                                                val result = FirebaseAuthRepository.signUpWithEmail(
+                                                    email = cleanEmail,
+                                                    password = cleanPass,
+                                                    fullName = cleanFullName,
+                                                    phoneNumber = cleanPhone,
+                                                    barangay = regBarangay,
+                                                    purokZone = regPurokZone
+                                                )
+                                                isLoading = false
+                                                if (result.isSuccess) {
+                                                    onRegisterClick()
+                                                } else {
+                                                    errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Registration failed."
+                                                }
+                                            }
                                         }
                                     }
                                 },
+                                enabled = !isLoading,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(50.dp),
@@ -677,7 +734,6 @@ fun CityCareLoginScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Already have an account? Log in
                     Row(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,

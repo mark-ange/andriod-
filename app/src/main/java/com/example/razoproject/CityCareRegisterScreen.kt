@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -25,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 
 // Figma Registration Screen Styling
 val RegGreenPrimary = Color(0xFF1E3A2B)
@@ -39,6 +39,7 @@ fun CityCareRegisterScreen(
     onRegisterSuccess: () -> Unit = {},
     onLoginClick: () -> Unit = {}
 ) {
+    val coroutineScope = rememberCoroutineScope()
     var fullName by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var emailOptional by remember { mutableStateOf("") }
@@ -48,6 +49,7 @@ fun CityCareRegisterScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var agreeToTerms by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
     var isBarangayDropdownExpanded by remember { mutableStateOf(false) }
 
     val barangayList = listOf("Iponan", "Bulua", "Canitoan", "Carmen", "Patag", "Kauswagan")
@@ -130,9 +132,16 @@ fun CityCareRegisterScreen(
                             }
                         }
 
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                color = RegGreenPrimary,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+                        }
+
                         // SECTION 1: Personal Information
                         Text(
-                            text = "Personal Information imo ning info waah ka",
+                            text = "Personal Information",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = RegTextDark
@@ -140,14 +149,14 @@ fun CityCareRegisterScreen(
 
                         // Full Name
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(text = "Full Name? fullname ngani pati pag basa bungol ", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = RegTextDark)
+                            Text(text = "Full Name", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = RegTextDark)
                             OutlinedTextField(
                                 value = fullName,
                                 onValueChange = {
                                     fullName = it
                                     errorMessage = null
                                 },
-                                placeholder = { Text("Juan Dela Cruz(example basin wla paka ka ila sa imo ngalan)", fontSize = 12.sp, color = RegTextMuted) },
+                                placeholder = { Text("Juan Dela Cruz", fontSize = 12.sp, color = RegTextMuted) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true,
                                 shape = RoundedCornerShape(10.dp),
@@ -183,9 +192,9 @@ fun CityCareRegisterScreen(
                             )
                         }
 
-                        // Email (Optional)
+                        // Email
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(text = "Email (Optional)", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = RegTextDark)
+                            Text(text = "Email Address", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = RegTextDark)
                             OutlinedTextField(
                                 value = emailOptional,
                                 onValueChange = { emailOptional = it },
@@ -362,31 +371,44 @@ fun CityCareRegisterScreen(
                             )
                         }
 
-                        // CREATE ACCOUNT BUTTON
+                        // CREATE ACCOUNT BUTTON (FIREBASE AUTH & FIRESTORE)
                         Button(
                             onClick = {
+                                val cleanFullName = fullName.trim()
+                                val cleanPhone = phoneNumber.trim()
+                                val cleanEmail = emailOptional.trim()
+                                val cleanPass = password.trim()
+
                                 when {
-                                    fullName.trim().isEmpty() -> {
-                                        errorMessage = "Please enter your Full Name!"
-                                    }
-                                    phoneNumber.trim().isEmpty() -> {
-                                        errorMessage = "Please enter your Phone Number!"
-                                    }
-                                    password.trim().isEmpty() -> {
-                                        errorMessage = "Please enter a Password!"
-                                    }
-                                    password != confirmPassword -> {
-                                        errorMessage = "Passwords do not match!"
-                                    }
-                                    !agreeToTerms -> {
-                                        errorMessage = "Please agree to the Terms of Service and Privacy Policy."
-                                    }
+                                    cleanFullName.isEmpty() -> errorMessage = "Please enter your Full Name!"
+                                    cleanPhone.isEmpty() -> errorMessage = "Please enter your Phone Number!"
+                                    cleanEmail.isEmpty() -> errorMessage = "Please enter an Email Address for account registration!"
+                                    cleanPass.isEmpty() -> errorMessage = "Please enter a Password!"
+                                    cleanPass != confirmPassword -> errorMessage = "Passwords do not match!"
+                                    !agreeToTerms -> errorMessage = "Please agree to the Terms of Service and Privacy Policy."
                                     else -> {
                                         errorMessage = null
-                                        onRegisterSuccess()
+                                        isLoading = true
+                                        coroutineScope.launch {
+                                            val result = FirebaseAuthRepository.signUpWithEmail(
+                                                email = cleanEmail,
+                                                password = cleanPass,
+                                                fullName = cleanFullName,
+                                                phoneNumber = cleanPhone,
+                                                barangay = selectedBarangay,
+                                                purokZone = purokZone
+                                            )
+                                            isLoading = false
+                                            if (result.isSuccess) {
+                                                onRegisterSuccess()
+                                            } else {
+                                                errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Registration failed."
+                                            }
+                                        }
                                     }
                                 }
                             },
+                            enabled = !isLoading,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(50.dp),
@@ -420,7 +442,6 @@ fun CityCareRegisterScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Footer Link: Already have an account? Log in
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically

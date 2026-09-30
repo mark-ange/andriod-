@@ -1,18 +1,14 @@
 package com.example.razoproject
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,13 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 
 // Design System Colors matching Figma Reset Password Screen
 val ResetCardBg = Color(0xFFF0F4F9)
@@ -41,14 +34,11 @@ fun CityCareResetPasswordScreen(
     onBackClick: () -> Unit = {},
     onResetSuccess: () -> Unit = {}
 ) {
-    var emailOrPhone by remember { mutableStateOf("") }
-    var otpDigits = remember { mutableStateListOf("", "", "", "", "", "") }
-    var newPassword by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-    var isNewPassVisible by remember { mutableStateOf(false) }
-    var isConfirmPassVisible by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    var emailAddress by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var timerText by remember { mutableStateOf("01:59") }
+    var successMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = Color(0xFFF8FAFC)
@@ -98,13 +88,13 @@ fun CityCareResetPasswordScreen(
 
                             Column {
                                 Text(
-                                    text = "utroha imongpassword ",
+                                    text = "Reset Password",
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = ResetGreenPrimary
                                 )
                                 Text(
-                                    text = "Recover your CityCare CDO kay bugok man !",
+                                    text = "Recover your CityCare CDO account",
                                     fontSize = 12.sp,
                                     color = ResetTextMuted
                                 )
@@ -113,7 +103,7 @@ fun CityCareResetPasswordScreen(
 
                         // Top Progress Bar
                         LinearProgressIndicator(
-                            progress = { 0.4f },
+                            progress = { 0.5f },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(6.dp)
@@ -139,23 +129,48 @@ fun CityCareResetPasswordScreen(
                             }
                         }
 
-                        // 1. Email or Phone Input
+                        // Success Banner
+                        successMessage?.let { msg ->
+                            Surface(
+                                color = Color(0xFFECFDF5),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = msg,
+                                    color = Color(0xFF059669),
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(10.dp)
+                                )
+                            }
+                        }
+
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                color = ResetGreenPrimary,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+                        }
+
+                        // Email Input
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text(
-                                text = "Email or Phone Number nimo lisod pod og iya nga imo maning cp",
+                                text = "Registered Email Address",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = ResetTextDark
                             )
                             OutlinedTextField(
-                                value = emailOrPhone,
+                                value = emailAddress,
                                 onValueChange = {
-                                    emailOrPhone = it
+                                    emailAddress = it
                                     errorMessage = null
+                                    successMessage = null
                                 },
                                 placeholder = {
                                     Text(
-                                        text = "e.g. juan@kagayan.ph or 0917...(example rani kubayahon napod nimo ni rom ",
+                                        text = "e.g. juan@kagayan.ph",
                                         fontSize = 12.sp,
                                         color = ResetTextMuted
                                     )
@@ -172,180 +187,30 @@ fun CityCareResetPasswordScreen(
                             )
                         }
 
-                        HorizontalDivider(color = Color(0xFFF1F5F9))
-
-                        // 2. Verification Code Section
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "Enter Verification Code ayaw patakag butang number dana mag txt ra me pag hulat  ",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = ResetTextDark
-                            )
-                            Text(
-                                text = "We've sent a 6-digit code to your registered contact.",
-                                fontSize = 11.sp,
-                                color = ResetTextMuted,
-                                textAlign = TextAlign.Center
-                            )
-
-                            // 6 OTP Digit Boxes
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                for (i in 0 until 6) {
-                                    OutlinedTextField(
-                                        value = otpDigits[i],
-                                        onValueChange = { valText ->
-                                            if (valText.length <= 1) {
-                                                otpDigits[i] = valText
-                                            }
-                                        },
-                                        modifier = Modifier
-                                            .width(42.dp)
-                                            .height(48.dp),
-                                        singleLine = true,
-                                        textStyle = LocalTextStyle.current.copy(
-                                            textAlign = TextAlign.Center,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 16.sp
-                                        ),
-                                        shape = RoundedCornerShape(8.dp),
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = ResetGreenPrimary,
-                                            unfocusedBorderColor = Color.Transparent,
-                                            focusedContainerColor = ResetCardBg,
-                                            unfocusedContainerColor = ResetCardBg
-                                        )
-                                    )
-                                }
-                            }
-
-                            Row(
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Resend code in ",
-                                    fontSize = 11.sp,
-                                    color = ResetTextMuted
-                                )
-                                Text(
-                                    text = timerText,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = ResetGreenPrimary
-                                )
-                            }
-                        }
-
-                        HorizontalDivider(color = Color(0xFFF1F5F9))
-
-                        // 3. Set New Password Input
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(
-                                text = "Set New Password",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = ResetTextDark
-                            )
-                            OutlinedTextField(
-                                value = newPassword,
-                                onValueChange = {
-                                    newPassword = it
-                                    errorMessage = null
-                                },
-                                placeholder = { Text("••••••••", fontSize = 12.sp, color = ResetTextMuted) },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                trailingIcon = {
-                                    IconButton(onClick = { isNewPassVisible = !isNewPassVisible }) {
-                                        Icon(
-                                            imageVector = if (isNewPassVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                            contentDescription = null,
-                                            tint = ResetTextMuted,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                },
-                                visualTransformation = if (isNewPassVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                                shape = RoundedCornerShape(10.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = ResetGreenPrimary,
-                                    unfocusedBorderColor = Color.Transparent,
-                                    focusedContainerColor = ResetCardBg,
-                                    unfocusedContainerColor = ResetCardBg
-                                )
-                            )
-                        }
-
-                        // 4. Confirm New Password Input
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(
-                                text = "Confirm New Password",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = ResetTextDark
-                            )
-                            OutlinedTextField(
-                                value = confirmPassword,
-                                onValueChange = {
-                                    confirmPassword = it
-                                    errorMessage = null
-                                },
-                                placeholder = { Text("••••••••", fontSize = 12.sp, color = ResetTextMuted) },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                trailingIcon = {
-                                    IconButton(onClick = { isConfirmPassVisible = !isConfirmPassVisible }) {
-                                        Icon(
-                                            imageVector = if (isConfirmPassVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                            contentDescription = null,
-                                            tint = ResetTextMuted,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                },
-                                visualTransformation = if (isConfirmPassVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                                shape = RoundedCornerShape(10.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = ResetGreenPrimary,
-                                    unfocusedBorderColor = Color.Transparent,
-                                    focusedContainerColor = ResetCardBg,
-                                    unfocusedContainerColor = ResetCardBg
-                                )
-                            )
-                        }
-
                         Spacer(modifier = Modifier.height(6.dp))
 
-                        // 5. Submit Button: RESET PASSWORD
+                        // Submit Button: RESET PASSWORD (FIREBASE AUTH)
                         Button(
                             onClick = {
-                                when {
-                                    emailOrPhone.trim().isEmpty() -> {
-                                        errorMessage = "Please enter your Email or Phone Number! pag dali"
-                                    }
-                                    newPassword.trim().isEmpty() -> {
-                                        errorMessage = "Please enter a new password!"
-                                    }
-                                    newPassword != confirmPassword -> {
-                                        errorMessage = "Passwords do not match!"
-                                    }
-                                    else -> {
-                                        errorMessage = null
-                                        onResetSuccess()
+                                val cleanEmail = emailAddress.trim()
+                                if (cleanEmail.isEmpty()) {
+                                    errorMessage = "Please enter your registered Email Address!"
+                                } else {
+                                    errorMessage = null
+                                    isLoading = true
+                                    coroutineScope.launch {
+                                        val result = FirebaseAuthRepository.sendPasswordResetEmail(cleanEmail)
+                                        isLoading = false
+                                        if (result.isSuccess) {
+                                            successMessage = "Password reset email sent! Please check your inbox."
+                                            onResetSuccess()
+                                        } else {
+                                            errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Failed to send password reset email."
+                                        }
                                     }
                                 }
                             },
+                            enabled = !isLoading,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(48.dp),
@@ -361,7 +226,7 @@ fun CityCareResetPasswordScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
-                                    text = "RESET PASSWORD",
+                                    text = "SEND RESET EMAIL",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.ExtraBold,
                                     letterSpacing = 0.5.sp
