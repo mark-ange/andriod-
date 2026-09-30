@@ -2812,7 +2812,7 @@ fun ProfileScreenContent(
                     Column {
                         ProfileMenuRow(icon = Icons.Outlined.Description, title = "Terms of Service & Privacy Policy")
                         HorizontalDivider(color = Color(0xFFF1F5F9))
-                        ProfileMenuRow(icon = Icons.Outlined.HelpOutline, title = "Help & FAQ")
+                        ProfileMenuRow(icon = Icons.AutoMirrored.Outlined.HelpOutline, title = "Help & FAQ")
                     }
                 }
             }
