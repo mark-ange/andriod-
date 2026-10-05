@@ -1,15 +1,13 @@
 import express from 'express';
-import dotenv from 'dotenv';
 import cors from 'cors';
-import connectDB from './config/db.js';
-
-dotenv.config();
-connectDB();
+import barangayRoutes from './routes/barangayRoutes.js';
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+app.use('/api/barangays', barangayRoutes);
 
 app.get('/', (req, res) => {
   res.send('CityCare API Running...');
