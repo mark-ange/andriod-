@@ -9,3 +9,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Environment variable files containing credentials
+.env
+.env.local
+.env.*.local
+backend/.env
