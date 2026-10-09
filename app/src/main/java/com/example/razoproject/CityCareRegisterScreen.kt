@@ -61,14 +61,14 @@ fun CityCareRegisterScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 20.dp, vertical = 20.dp),
+                .padding(horizontal = 20.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
                 // Top Logo Emblem
                 Box(
                     modifier = Modifier
-                        .size(56.dp)
+                        .size(52.dp)
                         .clip(RoundedCornerShape(14.dp))
                         .background(RegGreenPrimary),
                     contentAlignment = Alignment.Center
@@ -77,29 +77,23 @@ fun CityCareRegisterScreen(
                         imageVector = Icons.Default.Eco,
                         contentDescription = "CityCare Emblem",
                         tint = Color.White,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(30.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                // Title & Subtitle
-                Text(
-                    text = "CityCare CDO",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = RegGreenPrimary,
-                    textAlign = TextAlign.Center
-                )
+                // Subtitle
                 Text(
                     text = "Register to report issues and improve our community.",
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
                     color = RegTextMuted,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // Card Container
                 Card(

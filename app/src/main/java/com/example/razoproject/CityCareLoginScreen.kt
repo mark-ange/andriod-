@@ -173,7 +173,7 @@ fun CityCareLoginScreen(
                                 colors = listOf(EcoAuthDarkGreen, EcoAuthGreen)
                             )
                         )
-                        .padding(horizontal = 24.dp, vertical = 28.dp)
+                        .padding(start = 24.dp, end = 24.dp, top = 32.dp, bottom = 24.dp)
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(
@@ -181,18 +181,12 @@ fun CityCareLoginScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Surface(
-                                color = Color.White.copy(alpha = 0.2f),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text(
-                                    text = "CityCare CDO",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                                )
-                            }
+                            Text(
+                                text = "Resident Environmental Portal",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF80ED99)
+                            )
 
                             Box(
                                 modifier = Modifier
@@ -488,49 +482,53 @@ fun CityCareLoginScreen(
                                 modifier = Modifier.fillMaxWidth()
                             )
 
-                            // UPDATED SOCIAL LOGIN BUTTONS WITH LOGOS
+                            // UPDATED SOCIAL LOGIN BUTTONS WITH LOGOS (EXPANDED FULL WIDTH)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                    // Facebook Button
-                                    OutlinedButton(
-                                        onClick = {
-                                            errorMessage = null
-                                            activeSocialProvider = "Facebook"
-                                        },
-                                        modifier = Modifier.height(44.dp),
-                                        shape = RoundedCornerShape(10.dp),
-                                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFCBD5E1))
+                                // Facebook Button
+                                OutlinedButton(
+                                    onClick = {
+                                        errorMessage = null
+                                        activeSocialProvider = "Facebook"
+                                    },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(44.dp),
+                                    shape = RoundedCornerShape(10.dp),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFCBD5E1))
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
                                     ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            FacebookLogoIcon(modifier = Modifier.size(20.dp))
-                                            Text("Facebook", fontSize = 12.sp, color = EcoAuthTextDark, fontWeight = FontWeight.Bold)
-                                        }
+                                        FacebookLogoIcon(modifier = Modifier.size(18.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("Facebook", fontSize = 12.sp, color = EcoAuthTextDark, fontWeight = FontWeight.Bold)
                                     }
+                                }
 
-                                    // Google Button
-                                    OutlinedButton(
-                                        onClick = {
-                                            errorMessage = null
-                                            activeSocialProvider = "Google"
-                                        },
-                                        modifier = Modifier.height(44.dp),
-                                        shape = RoundedCornerShape(10.dp),
-                                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFCBD5E1))
+                                // Google Button
+                                OutlinedButton(
+                                    onClick = {
+                                        errorMessage = null
+                                        activeSocialProvider = "Google"
+                                    },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(44.dp),
+                                    shape = RoundedCornerShape(10.dp),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFCBD5E1))
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
                                     ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            GoogleLogoIcon(modifier = Modifier.size(20.dp))
-                                            Text("Google", fontSize = 12.sp, color = EcoAuthTextDark, fontWeight = FontWeight.Bold)
-                                        }
+                                        GoogleLogoIcon(modifier = Modifier.size(18.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("Google", fontSize = 12.sp, color = EcoAuthTextDark, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }

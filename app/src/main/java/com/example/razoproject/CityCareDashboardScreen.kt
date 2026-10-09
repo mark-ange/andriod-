@@ -515,7 +515,7 @@ fun HomeScreenContent(
                             colors = listOf(EcoHeaderDark, EcoHeaderGradientEnd)
                         )
                     )
-                    .padding(horizontal = 18.dp, vertical = 20.dp)
+                    .padding(start = 18.dp, end = 18.dp, top = 28.dp, bottom = 20.dp)
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     // Profile Row
@@ -1187,30 +1187,34 @@ fun NewWasteReportScreen(
                     }
 
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             CategoryChip(
                                 label = categories[0],
                                 selected = selectedCategory == categories[0],
-                                onClick = { selectedCategory = categories[0] }
+                                onClick = { selectedCategory = categories[0] },
+                                modifier = Modifier.weight(1f)
                             )
                             CategoryChip(
                                 label = categories[1],
                                 selected = selectedCategory == categories[1],
-                                onClick = { selectedCategory = categories[1] }
+                                onClick = { selectedCategory = categories[1] },
+                                modifier = Modifier.weight(1f)
                             )
                         }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             CategoryChip(
                                 label = categories[2],
                                 selected = selectedCategory == categories[2],
-                                onClick = { selectedCategory = categories[2] }
+                                onClick = { selectedCategory = categories[2] },
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             CategoryChip(
                                 label = categories[3],
                                 selected = selectedCategory == categories[3],
-                                onClick = { selectedCategory = categories[3] }
+                                onClick = { selectedCategory = categories[3] },
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
@@ -1330,9 +1334,7 @@ fun MyReportsScreenContent(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Header Row: CityCare CDO + Profile Avatar + Notification Bell
+            // Header Row: Profile Avatar + Notification Bell
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1356,13 +1358,6 @@ fun MyReportsScreenContent(
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "CityCare CDO",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = EcoPrimaryGreen
-                    )
                 }
 
                 Box(
@@ -3023,7 +3018,8 @@ fun StatusBadgeChip(status: String) {
 fun CategoryChip(
     label: String,
     selected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Surface(
         onClick = onClick,
@@ -3032,15 +3028,19 @@ fun CategoryChip(
         border = androidx.compose.foundation.BorderStroke(
             width = 1.dp,
             color = if (selected) EcoPrimaryGreen else Color(0xFFCBD5E1)
-        )
+        ),
+        modifier = modifier
     ) {
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = if (selected) Color.White else EcoTextDark,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-        )
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                text = label,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = if (selected) Color.White else EcoTextDark,
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 
