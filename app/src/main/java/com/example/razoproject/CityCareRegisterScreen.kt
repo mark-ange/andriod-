@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -55,12 +56,14 @@ fun CityCareRegisterScreen(
     val barangayList = listOf("Iponan", "Bulua", "Canitoan", "Carmen", "Patag", "Kauswagan")
 
     Scaffold(
-        containerColor = Color(0xFFF8FAFC)
+        containerColor = Color(0xFFF8FAFC),
+        contentWindowInsets = WindowInsets.systemBars
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .imePadding()
                 .padding(horizontal = 20.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -395,7 +398,10 @@ fun CityCareRegisterScreen(
                                             name = cleanName,
                                             purok = purokZone.ifEmpty { "Zone 3" },
                                             identifier = cleanPhone.ifEmpty { cleanEmail },
-                                            password = cleanPass
+                                            password = cleanPass,
+                                            email = cleanEmail,
+                                            phoneNumber = cleanPhone,
+                                            barangay = selectedBarangay
                                         )
 
                                         coroutineScope.launch {

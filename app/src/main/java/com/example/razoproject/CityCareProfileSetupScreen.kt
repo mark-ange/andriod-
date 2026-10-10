@@ -11,7 +11,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.Person
@@ -89,22 +91,24 @@ fun CityCareProfileSetupScreen(
     }
 
     Scaffold(
-        containerColor = Color.White
+        containerColor = Color.White,
+        contentWindowInsets = WindowInsets.systemBars
     ) { paddingValues ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(24.dp)
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             // Top Right Logo Icon
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(42.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFFE2E8F0)),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.TopEnd
             ) {
                 Icon(
                     imageVector = Icons.Default.Eco,
@@ -114,23 +118,15 @@ fun CityCareProfileSetupScreen(
                 )
             }
 
-            // Main Content Column
-            Column(
+            // Large Circular Avatar Placeholder
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.Center),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                    .size(180.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFD9D9D9))
+                    .border(2.dp, Color(0xFFCBD5E1), CircleShape),
+                contentAlignment = Alignment.Center
             ) {
-                // Large Circular Avatar Placeholder
-                Box(
-                    modifier = Modifier
-                        .size(180.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFD9D9D9))
-                        .border(2.dp, Color(0xFFCBD5E1), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
                     if (profileBitmap != null) {
                         Image(
                             bitmap = profileBitmap!!.asImageBitmap(),
@@ -214,7 +210,6 @@ fun CityCareProfileSetupScreen(
                     )
                 }
             }
-        }
     }
 }
 

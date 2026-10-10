@@ -49,17 +49,18 @@ const initialMockReports = [
 let inMemoryReports = [...initialMockReports];
 
 // @route   GET /api/reports
-// @desc    Get all incident waste reports (supports filtering by barangay, status)
+// @desc    Get all incident waste reports (supports filtering by barangay, status, userEmail)
 // @access  Public or Protected
 router.get('/', async (req, res) => {
   try {
-    const { barangay, status } = req.query;
+    const { barangay, status, userEmail } = req.query;
     let filter = {};
     if (barangay) filter.barangay = barangay;
     if (status) filter.status = status;
+    if (userEmail) filter.userEmail = userEmail.toLowerCase().trim();
 
     let reports = await Report.find(filter).sort({ createdAt: -1 });
-    if (reports.length === 0) {
+    if (reports.length === 0 && !userEmail) {
       reports = inMemoryReports.filter(r => {
         let match = true;
         if (barangay && r.barangay !== barangay) match = false;
@@ -74,10 +75,18 @@ router.get('/', async (req, res) => {
       data: reports
     });
   } catch (error) {
+    const { barangay, status, userEmail } = req.query;
+    let filteredMem = inMemoryReports.filter(r => {
+      let match = true;
+      if (barangay && r.barangay !== barangay) match = false;
+      if (status && r.status !== status) match = false;
+      if (userEmail && r.userEmail && (r.userEmail || '').toLowerCase() !== userEmail.toLowerCase().trim()) match = false;
+      return match;
+    });
     res.json({
       success: true,
-      count: inMemoryReports.length,
-      data: inMemoryReports
+      count: filteredMem.length,
+      data: filteredMem
     });
   }
 });
@@ -87,9 +96,9 @@ router.get('/', async (req, res) => {
 // @access  Public or Protected
 router.post('/', async (req, res) => {
   try {
-    const { title, category, barangay, purokZone, landmark, description, gpsCoordinates, photoUrl } = req.body;
+    const { title, category, barangay, purokZone, landmark, description, gpsCoordinates, photoUrl, userEmail, reportId } = req.body;
 
-    const generatedId = `#CDO-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const generatedId = reportId || `#CDO-2026-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const newReportData = {
       reportId: generatedId,
@@ -103,6 +112,7 @@ router.post('/', async (req, res) => {
       gpsCoordinates: gpsCoordinates || '8.4822° N, 124.6175° E',
       unitAssigned: 'Unassigned',
       photoUrl: photoUrl || '',
+      userEmail: userEmail ? userEmail.toLowerCase().trim() : '',
       user: req.user ? req.user._id : null,
       createdAt: new Date()
     };

@@ -29,6 +29,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
+        actionBar?.hide()
         enableEdgeToEdge()
 
         setContent {

@@ -50,6 +50,12 @@ const reportSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  userEmail: {
+    type: String,
+    lowercase: true,
+    trim: true,
+    default: ''
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
