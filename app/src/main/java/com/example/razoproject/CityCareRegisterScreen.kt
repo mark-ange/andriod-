@@ -88,7 +88,7 @@ fun CityCareRegisterScreen(
 
                 // Title & Subtitle
                 Text(
-                    text = "CityCare CDO",
+                    text = "Create Resident Account",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = RegGreenPrimary,

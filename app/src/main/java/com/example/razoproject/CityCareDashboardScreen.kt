@@ -2,6 +2,7 @@ package com.example.razoproject
 
 import android.app.Activity
 import android.graphics.Bitmap
+import android.location.Geocoder
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import kotlinx.coroutines.launch
@@ -40,10 +41,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import android.location.Geocoder
-import java.util.Locale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.util.Locale
 
 // Color Palette matching Eco UI Design
 val EcoHeaderDark = Color(0xFF0F382C)
@@ -91,11 +91,11 @@ data class WasteReportItem(
     val description: String = "Uncollected waste piled near the drainage. Causing obstruction on the sidewalk.",
     val category: String = "Illegal Dump Site",
     val landmark: String = "Near Barangay Health Center",
-    val imageBitmap: Bitmap? = null,
-    val photoBase64: String? = null,
     val userEmail: String = "",
     val unitAssigned: String = "Unassigned",
-    val gpsCoordinates: String = "8.4822° N, 124.6175° E"
+    val gpsCoordinates: String = "8.4822° N, 124.6175° E",
+    val photoBase64: String? = null,
+    val imageBitmap: Bitmap? = null
 )
 
 data class TipItem(
@@ -158,9 +158,7 @@ fun CityCareDashboardScreen(
                 title = "Brgy. Carmen, Purok 2",
                 barangay = "Carmen",
                 date = "Aug 5, 2026 • 3:00 PM",
-                status = "PENDING",
-                unitAssigned = "Unassigned",
-                gpsCoordinates = "8.4822° N, 124.6175° E"
+                status = "PENDING"
             )
         )
     }
@@ -177,51 +175,43 @@ fun CityCareDashboardScreen(
         )
     }
 
-    // Reports State List - Fetched Live from Backend REST API
-    val reportList = remember { mutableStateListOf<WasteReportItem>() }
-
-    LaunchedEffect(Unit) {
-        val cloudReports = CityCareApiService.fetchReportsFromCloud(context)
-        if (cloudReports.isNotEmpty()) {
-            reportList.clear()
-            reportList.addAll(cloudReports)
-            selectedReport = cloudReports.first()
-        } else {
-            reportList.addAll(
-                listOf(
-                    WasteReportItem(
-                        id = "#CDO-2026-0412",
-                        title = "Brgy. Carmen, Purok 2",
-                        barangay = "Carmen",
-                        date = "Aug 5, 2026 • 3:00 PM",
-                        status = "PENDING",
-                        unitAssigned = "Unassigned",
-                        gpsCoordinates = "8.4822° N, 124.6175° E"
-                    ),
-                    WasteReportItem(
-                        id = "#CDO-2026-0411",
-                        title = "Brgy. Lapasan, Zone 3",
-                        barangay = "Lapasan",
-                        date = "Aug 5, 2026 • 11:15 AM",
-                        status = "ASSIGNED",
-                        unitAssigned = "CLENRO Truck #4",
-                        gpsCoordinates = "8.4850° N, 124.6210° E"
-                    )
-                )
+    // Reports State List
+    val reportList = remember {
+        mutableStateListOf(
+            WasteReportItem(
+                id = "#CDO-2026-0412",
+                title = "Brgy. Carmen, Purok 2",
+                barangay = "Carmen",
+                date = "Aug 5, 2026 • 3:00 PM",
+                status = "PENDING",
+                userEmail = CityCareApiService.currentUserEmail
+            ),
+            WasteReportItem(
+                id = "#CDO-2026-0411",
+                title = "Brgy. Lapasan, Zone 3",
+                barangay = "Lapasan",
+                date = "Aug 5, 2026 • 11:15 AM",
+                status = "ASSIGNED",
+                userEmail = CityCareApiService.currentUserEmail
+            ),
+            WasteReportItem(
+                id = "#CDO-2026-0409",
+                title = "Brgy. Macasandig, Tibasak",
+                barangay = "Macasandig",
+                date = "Aug 2, 2026 • 4:28 PM",
+                status = "RESOLVED",
+                userEmail = CityCareApiService.currentUserEmail
             )
-        }
+        )
     }
 
     Scaffold(
         containerColor = Color(0xFFF8FAFC),
-        contentWindowInsets = WindowInsets.systemBars,
         bottomBar = {
             if (currentSubScreen == DashboardSubScreen.Main) {
                 // Elevated Center Floating Camera FAB Bottom Navigation Bar
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding(),
+                    modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.BottomCenter
                 ) {
                     Surface(
@@ -230,12 +220,12 @@ fun CityCareDashboardScreen(
                         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(68.dp)
+                            .height(76.dp)
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(horizontal = 4.dp, vertical = 2.dp),
+                                .padding(horizontal = 6.dp, vertical = 4.dp),
                             horizontalArrangement = Arrangement.SpaceAround,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -258,7 +248,7 @@ fun CityCareDashboardScreen(
                             )
 
                             // Center Spacer for Floating Camera Button
-                            Spacer(modifier = Modifier.width(52.dp))
+                            Spacer(modifier = Modifier.width(56.dp))
 
                             // 3. Support Tab
                             NavTabItemComposable(
@@ -288,8 +278,8 @@ fun CityCareDashboardScreen(
                         shadowElevation = 8.dp,
                         border = androidx.compose.foundation.BorderStroke(3.dp, Color.White),
                         modifier = Modifier
-                            .offset(y = (-20).dp)
-                            .size(54.dp)
+                            .offset(y = (-24).dp)
+                            .size(56.dp)
                             .align(Alignment.TopCenter)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -297,7 +287,7 @@ fun CityCareDashboardScreen(
                                 imageVector = Icons.Default.PhotoCamera,
                                 contentDescription = "Report Waste Camera",
                                 tint = Color.White,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(26.dp)
                             )
                         }
                     }
@@ -405,7 +395,7 @@ fun CityCareDashboardScreen(
         AlertDialog(
             onDismissRequest = { selectedGridFeature = null },
             title = { Text(featureName, fontWeight = FontWeight.Bold) },
-            text = { Text("Viewing $featureName for Barangay Carmen, CDO.") },
+            text = { Text("Viewing $featureName for ${CityCareApiService.currentUserLocation}.") },
             confirmButton = {
                 TextButton(onClick = { selectedGridFeature = null }) {
                     Text("Close", fontWeight = FontWeight.Bold)
@@ -500,6 +490,32 @@ fun CityCareDashboardScreen(
 }
 
 // -----------------------------------------------------------------------------
+// STANDARD USER PROFILE AVATAR COMPOSABLE
+// -----------------------------------------------------------------------------
+@Composable
+fun UserProfileAvatarComposable(
+    modifier: Modifier = Modifier.size(36.dp),
+    onClick: () -> Unit = {}
+) {
+    val initial = CityCareApiService.currentUserName.take(1).uppercase()
+    Box(
+        modifier = modifier
+            .clip(CircleShape)
+            .background(EcoPrimaryGreen)
+            .border(1.5.dp, Color.White, CircleShape)
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = initial.ifEmpty { "U" },
+            color = Color.White,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.ExtraBold
+        )
+    }
+}
+
+// -----------------------------------------------------------------------------
 // 1. HOME TAB SCREEN CONTENT
 // -----------------------------------------------------------------------------
 @Composable
@@ -541,25 +557,14 @@ fun HomeScreenContent(
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                             modifier = Modifier.clickable { onOpenProfile() }
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(44.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.2f))
-                                    .border(1.5.dp, Color.White, CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = "User Avatar",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(28.dp)
-                                )
-                            }
+                            UserProfileAvatarComposable(
+                                modifier = Modifier.size(44.dp),
+                                onClick = onOpenProfile
+                            )
 
                             Column {
                                 Text(
-                                    text = "Hello, ${CityCareApiService.currentUserName}!",
+                                    text = "Hello, ${CityCareApiService.currentUserName.substringBefore(" ")}!",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
@@ -581,7 +586,7 @@ fun HomeScreenContent(
                             }
                         }
 
-                        // Notification Bell with 100% Visible Red Badge
+                        // Notification Bell
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
@@ -683,25 +688,16 @@ fun HomeScreenContent(
                             )
                         }
 
-                        var liveScheduleText by remember { mutableStateOf("MWF - Biodegradable\nTTHS - Non-Bio") }
-
-                        LaunchedEffect(Unit) {
-                            val schedule = CityCareApiService.fetchSchedulesFromCloud("Carmen")
-                            if (schedule.isNotEmpty()) {
-                                liveScheduleText = schedule
-                            }
-                        }
-
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "CLENRO Collection Schedule for Carmen:",
+                                text = "CLENRO Collection Schedule:",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = EcoTextDark
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = liveScheduleText,
+                                text = "MWF - Biodegradable\nTTHS - Non-Bio",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = EcoTextMuted,
@@ -718,7 +714,7 @@ fun HomeScreenContent(
                     }
                 }
 
-                // 3. Quick Status Summary Cards (2 PENDING, 1 ASSIGNED, 5 DONE)
+                // 3. Quick Status Summary Cards
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -928,7 +924,8 @@ fun HomeScreenContent(
                                 title = "Brgy. Carmen, Purok 2",
                                 barangay = "Carmen",
                                 date = "Today, 8:45 AM",
-                                status = "PENDING"
+                                status = "PENDING",
+                                userEmail = CityCareApiService.currentUserEmail
                             )
                         )
                     },
@@ -981,95 +978,6 @@ fun HomeScreenContent(
 }
 
 // -----------------------------------------------------------------------------
-fun fetchRealDeviceLocation(
-    context: android.content.Context,
-    onLocationFetched: (gpsCoordinates: String, barangay: String, purokZone: String) -> Unit
-) {
-    try {
-        if (androidx.core.content.ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) == android.content.pm.PackageManager.PERMISSION_GRANTED ||
-            androidx.core.content.ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        ) {
-            val fusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(context)
-            fusedLocationClient.lastLocation.addOnSuccessListener { location: android.location.Location? ->
-                if (location != null) {
-                    val lat = location.latitude
-                    val lng = location.longitude
-                    val latDir = if (lat >= 0) "N" else "S"
-                    val lngDir = if (lng >= 0) "E" else "W"
-                    val formattedGps = String.format(Locale.US, "%.4f° %s, %.4f° %s", kotlin.math.abs(lat), latDir, kotlin.math.abs(lng), lngDir)
-
-                    var detectedBarangay = "Carmen"
-                    var detectedPurok = "Zone 3"
-
-                    try {
-                        val geocoder = Geocoder(context, Locale.getDefault())
-                        @Suppress("DEPRECATION")
-                        val addresses = geocoder.getFromLocation(lat, lng, 1)
-                        if (!addresses.isNullOrEmpty()) {
-                            val address = addresses[0]
-                            detectedBarangay = address.subLocality ?: address.locality ?: "Carmen"
-                            detectedPurok = address.thoroughfare ?: address.featureName ?: "Zone 3"
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-
-                    onLocationFetched(formattedGps, detectedBarangay, detectedPurok)
-                } else {
-                    fusedLocationClient.getCurrentLocation(
-                        com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,
-                        null
-                    ).addOnSuccessListener { freshLocation: android.location.Location? ->
-                        if (freshLocation != null) {
-                            val lat = freshLocation.latitude
-                            val lng = freshLocation.longitude
-                            val latDir = if (lat >= 0) "N" else "S"
-                            val lngDir = if (lng >= 0) "E" else "W"
-                            val formattedGps = String.format(Locale.US, "%.4f° %s, %.4f° %s", kotlin.math.abs(lat), latDir, kotlin.math.abs(lng), lngDir)
-
-                            var detectedBarangay = "Carmen"
-                            var detectedPurok = "Zone 3"
-
-                            try {
-                                val geocoder = Geocoder(context, Locale.getDefault())
-                                @Suppress("DEPRECATION")
-                                val addresses = geocoder.getFromLocation(lat, lng, 1)
-                                if (!addresses.isNullOrEmpty()) {
-                                    val address = addresses[0]
-                                    detectedBarangay = address.subLocality ?: address.locality ?: "Carmen"
-                                    detectedPurok = address.thoroughfare ?: address.featureName ?: "Zone 3"
-                                }
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-
-                            onLocationFetched(formattedGps, detectedBarangay, detectedPurok)
-                        } else {
-                            onLocationFetched("8.4822° N, 124.6175° E", "Carmen", "Purok 2, Max Suniel St.")
-                        }
-                    }.addOnFailureListener {
-                        onLocationFetched("8.4822° N, 124.6175° E", "Carmen", "Purok 2, Max Suniel St.")
-                    }
-                }
-            }.addOnFailureListener {
-                onLocationFetched("8.4822° N, 124.6175° E", "Carmen", "Purok 2, Max Suniel St.")
-            }
-        } else {
-            onLocationFetched("8.4822° N, 124.6175° E", "Carmen", "Purok 2, Max Suniel St.")
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-        onLocationFetched("8.4822° N, 124.6175° E", "Carmen", "Purok 2, Max Suniel St.")
-    }
-}
-
-// -----------------------------------------------------------------------------
 // 2. NEW WASTE REPORT FORM SCREEN
 // -----------------------------------------------------------------------------
 @Composable
@@ -1078,56 +986,19 @@ fun NewWasteReportScreen(
     onSubmit: (WasteReportItem) -> Unit
 ) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
     var capturedPhotoBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var selectedCategory by remember { mutableStateOf("Illegal Dump Site") }
+    var gpsCoordinates by remember { mutableStateOf("8.4822° N, 124.6175° E") }
     var barangayInput by remember { mutableStateOf("Carmen") }
-    var purokInput by remember { mutableStateOf("Purok 2, Max Suniel St.") }
+    var purokInput by remember { mutableStateOf("Zone 3") }
     var landmarkInput by remember { mutableStateOf("Near Barangay Health Center") }
     var remarksInput by remember { mutableStateOf("Trash has been uncollected for 3 days.") }
 
-    var realGpsCoordinates by remember { mutableStateOf("Detecting GPS...") }
-    var isGpsFetching by remember { mutableStateOf(true) }
-    var isGpsVerified by remember { mutableStateOf(false) }
-
-    val locationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        if (permissions.values.any { it }) {
-            fetchRealDeviceLocation(context) { gps, brgy, purok ->
-                realGpsCoordinates = gps
-                if (brgy.isNotBlank()) barangayInput = brgy
-                if (purok.isNotBlank()) purokInput = purok
-                isGpsFetching = false
-                isGpsVerified = true
-            }
-        }
-    }
-
     LaunchedEffect(Unit) {
-        if (androidx.core.content.ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) == android.content.pm.PackageManager.PERMISSION_GRANTED ||
-            androidx.core.content.ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        ) {
-            fetchRealDeviceLocation(context) { gps, brgy, purok ->
-                realGpsCoordinates = gps
-                if (brgy.isNotBlank()) barangayInput = brgy
-                if (purok.isNotBlank()) purokInput = purok
-                isGpsFetching = false
-                isGpsVerified = true
-            }
-        } else {
-            locationPermissionLauncher.launch(
-                arrayOf(
-                    android.Manifest.permission.ACCESS_FINE_LOCATION,
-                    android.Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
+        fetchRealDeviceLocation(context) { gps, bgy, purok ->
+            gpsCoordinates = gps
+            barangayInput = bgy
+            purokInput = purok
         }
     }
 
@@ -1273,61 +1144,27 @@ fun NewWasteReportScreen(
                         modifier = Modifier.padding(14.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.LocationOn,
-                                    contentDescription = null,
-                                    tint = EcoPrimaryGreen,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "Location Details",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = EcoTextDark
-                                )
-                            }
-
-                            Surface(
-                                color = if (isGpsVerified) Color(0xFFDCFCE7) else Color(0xFFFEF3C7),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = if (isGpsVerified) Icons.Default.Lock else Icons.Default.GpsFixed,
-                                        contentDescription = null,
-                                        tint = if (isGpsVerified) Color(0xFF166534) else Color(0xFF92400E),
-                                        modifier = Modifier.size(12.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = if (isGpsVerified) "🔒 GPS Anti-Fraud Locked" else "Detecting GPS...",
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isGpsVerified) Color(0xFF166534) else Color(0xFF92400E)
-                                    )
-                                }
-                            }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = EcoPrimaryGreen,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Location Details (GPS Anti-Fraud Locked)",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = EcoTextDark
+                            )
                         }
 
-                        MapPreviewBox(
-                            heightDp = 110,
-                            gpsText = realGpsCoordinates,
-                            reportTitle = "Brgy. $barangayInput, $purokInput"
-                        )
+                        MapPreviewBox(heightDp = 110)
 
-                        Text("Verified GPS Coordinates (Locked to avoid fake reports)", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EcoPrimaryGreen)
+                        Text("Barangay (Auto-Detected from Map)", fontSize = 11.sp, color = EcoPrimaryGreen, fontWeight = FontWeight.Bold)
                         OutlinedTextField(
-                            value = realGpsCoordinates,
+                            value = barangayInput,
                             onValueChange = {},
                             readOnly = true,
                             enabled = false,
@@ -1344,23 +1181,23 @@ fun NewWasteReportScreen(
                             )
                         )
 
-                        Text("Barangay", fontSize = 11.sp, color = EcoTextMuted)
-                        OutlinedTextField(
-                            value = barangayInput,
-                            onValueChange = { barangayInput = it },
-                            modifier = Modifier.fillMaxWidth(),
-                            trailingIcon = {
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-                            },
-                            shape = RoundedCornerShape(10.dp)
-                        )
-
-                        Text("Purok / Zone / Street", fontSize = 11.sp, color = EcoTextMuted)
+                        Text("Purok / Zone / Street (Auto-Detected from Map)", fontSize = 11.sp, color = EcoPrimaryGreen, fontWeight = FontWeight.Bold)
                         OutlinedTextField(
                             value = purokInput,
-                            onValueChange = { purokInput = it },
+                            onValueChange = {},
+                            readOnly = true,
+                            enabled = false,
+                            trailingIcon = {
+                                Icon(Icons.Default.Lock, contentDescription = "Anti-Fraud Locked", tint = EcoPrimaryGreen)
+                            },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(10.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                disabledTextColor = EcoTextDark,
+                                disabledBorderColor = EcoPrimaryGreen,
+                                disabledLabelColor = EcoPrimaryGreen,
+                                disabledContainerColor = Color(0xFFF0FDF4)
+                            )
                         )
 
                         Text("Optional Landmark", fontSize = 11.sp, color = EcoTextMuted)
@@ -1450,7 +1287,6 @@ fun NewWasteReportScreen(
                 Button(
                     onClick = {
                         val newId = "#CDO-2026-04" + (13..99).random()
-                        val photoBase64 = capturedPhotoBitmap?.let { CityCareApiService.bitmapToBase64(it) }
                         val newReport = WasteReportItem(
                             id = newId,
                             title = "Brgy. $barangayInput, $purokInput",
@@ -1460,21 +1296,23 @@ fun NewWasteReportScreen(
                             description = remarksInput,
                             category = selectedCategory,
                             landmark = landmarkInput,
-                            imageBitmap = capturedPhotoBitmap,
-                            photoBase64 = photoBase64,
                             userEmail = CityCareApiService.currentUserEmail,
-                            unitAssigned = "Unassigned",
-                            gpsCoordinates = realGpsCoordinates
+                            imageBitmap = capturedPhotoBitmap
                         )
-                        CityCareApiService.addLocalReport(context, newReport)
-                        coroutineScope.launch {
-                            val success = CityCareApiService.uploadReportToCloud(newReport)
-                            if (success) {
-                                Toast.makeText(context, "Report uploaded to CLENRO Server!", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(context, "Report saved locally. Check network connection for cloud sync.", Toast.LENGTH_LONG).show()
-                            }
+                        val reportData = ReportItemData(
+                            id = newId,
+                            title = "Brgy. $barangayInput, $purokInput",
+                            location = "$barangayInput, Cagayan de Oro City",
+                            status = "PENDING",
+                            time = "Today, Just Now",
+                            unitAssigned = "Unassigned",
+                            photoBitmap = capturedPhotoBitmap,
+                            gpsCoordinates = gpsCoordinates
+                        )
+                        kotlinx.coroutines.GlobalScope.launch {
+                            CityCareApiService.uploadReportToCloud(reportData)
                         }
+                        Toast.makeText(context, "Incident Report Submitted!", Toast.LENGTH_SHORT).show()
                         onSubmit(newReport)
                     },
                     modifier = Modifier
@@ -1503,6 +1341,55 @@ fun NewWasteReportScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
+    }
+}
+
+// Helper to fetch device GPS location
+fun fetchRealDeviceLocation(
+    context: android.content.Context,
+    onLocationFetched: (gpsCoordinates: String, barangay: String, purokZone: String) -> Unit
+) {
+    try {
+        if (androidx.core.content.ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED ||
+            androidx.core.content.ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            val fusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(context)
+            fusedLocationClient.lastLocation.addOnSuccessListener { location: android.location.Location? ->
+                if (location != null) {
+                    val lat = location.latitude
+                    val lng = location.longitude
+                    val latDir = if (lat >= 0) "N" else "S"
+                    val lngDir = if (lng >= 0) "E" else "W"
+                    val formattedGps = String.format(Locale.US, "%.4f° %s, %.4f° %s", kotlin.math.abs(lat), latDir, kotlin.math.abs(lng), lngDir)
+
+                    var detectedBarangay = "Carmen"
+                    var detectedPurok = "Zone 3"
+
+                    try {
+                        val geocoder = Geocoder(context, Locale.getDefault())
+                        @Suppress("DEPRECATION")
+                        val addresses = geocoder.getFromLocation(lat, lng, 1)
+                        if (!addresses.isNullOrEmpty()) {
+                            val address = addresses[0]
+                            detectedBarangay = address.subLocality ?: address.locality ?: "Carmen"
+                            detectedPurok = address.thoroughfare ?: address.featureName ?: "Zone 3"
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+
+                    onLocationFetched(formattedGps, detectedBarangay, detectedPurok)
+                }
+            }
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
     }
 }
 
@@ -1539,9 +1426,9 @@ fun MyReportsScreenContent(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Full-Screen Top Header: "My Reports" on left, Profile & Notification Bell on right
+            // Standard Top Header Bar with Safe Clearance
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1558,21 +1445,10 @@ fun MyReportsScreenContent(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(EcoPrimaryGreen)
-                            .clickable { onOpenProfile() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Profile",
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+                    UserProfileAvatarComposable(
+                        modifier = Modifier.size(36.dp),
+                        onClick = onOpenProfile
+                    )
 
                     Box(
                         modifier = Modifier
@@ -1707,32 +1583,11 @@ fun MyReportsScreenContent(
                             overflow = TextOverflow.Ellipsis
                         )
 
-                        if (report.unitAssigned.isNotBlank() && report.unitAssigned != "Unassigned") {
-                            Text(
-                                text = "🚛 Unit: ${report.unitAssigned}",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF0284C7)
-                            )
-                        }
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = "🕒 ${report.date}",
-                                fontSize = 10.sp,
-                                color = EcoTextMuted
-                            )
-                            Text(
-                                text = "• 📍 ${report.gpsCoordinates}",
-                                fontSize = 10.sp,
-                                color = EcoTextMuted,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
+                        Text(
+                            text = "🕒 ${report.date}",
+                            fontSize = 10.sp,
+                            color = EcoTextMuted
+                        )
                     }
                 }
             }
@@ -1761,7 +1616,7 @@ fun SupportScreenContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Row(
                 modifier = Modifier
@@ -2147,18 +2002,14 @@ fun TicketDetailsScreen(
                                 modifier = Modifier.fillMaxSize()
                             )
                             Surface(
-                                color = when (report.status) {
-                                    "RESOLVED" -> Color(0xFF16A34A)
-                                    "ASSIGNED", "IN_PROGRESS" -> Color(0xFF0284C7)
-                                    else -> Color(0xFFEAB308)
-                                },
+                                color = Color(0xFF0284C7),
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
                                     .padding(8.dp)
                                     .align(Alignment.TopStart)
                             ) {
                                 Text(
-                                    text = report.status,
+                                    text = "In-Progress",
                                     color = Color.White,
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
@@ -2191,60 +2042,28 @@ fun TicketDetailsScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        MapPreviewBox(
-                            heightDp = 100,
-                            gpsText = report.gpsCoordinates,
-                            reportTitle = report.title
-                        )
+                        MapPreviewBox(heightDp = 90)
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.LocationOn,
-                                    contentDescription = null,
-                                    tint = EcoPrimaryGreen,
-                                    modifier = Modifier.size(20.dp)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = EcoPrimaryGreen,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = "District 1 - ${report.barangay}",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = EcoTextDark
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Column {
-                                    Text(
-                                        text = "District 1 - ${report.barangay}",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = EcoTextDark
-                                    )
-                                    Text(
-                                        text = report.title,
-                                        fontSize = 11.sp,
-                                        color = EcoTextMuted
-                                    )
-                                    Text(
-                                        text = "📍 GPS: ${report.gpsCoordinates}",
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = EcoPrimaryGreen
-                                    )
-                                }
-                            }
-
-                            Button(
-                                onClick = {
-                                    openLocationInGoogleMaps(context, report.gpsCoordinates, report.title)
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = EcoPrimaryGreen),
-                                shape = RoundedCornerShape(12.dp),
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
-                            ) {
-                                Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Open Map", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text(
+                                    text = report.title,
+                                    fontSize = 11.sp,
+                                    color = EcoTextMuted
+                                )
                             }
                         }
                     }
@@ -2271,13 +2090,24 @@ fun TicketDetailsScreen(
                                 color = EcoTextDark
                             )
 
-                            StatusBadgeChip(status = report.status)
+                            Surface(
+                                color = Color(0xFF0284C7),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    text = "In Progress",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
                         }
 
                         TimelineStepItem(
                             stepNumber = 1,
                             title = "Report Submitted",
-                            subtitle = report.date,
+                            subtitle = "April 12, 2026 • 08:30 AM",
                             isCompleted = true,
                             isCurrent = false
                         )
@@ -2285,7 +2115,7 @@ fun TicketDetailsScreen(
                         TimelineStepItem(
                             stepNumber = 2,
                             title = "Acknowledged by Barangay/CLENRO",
-                            subtitle = "Received by Municipal System",
+                            subtitle = "April 12, 2026 • 09:15 AM",
                             isCompleted = true,
                             isCurrent = false
                         )
@@ -2293,9 +2123,9 @@ fun TicketDetailsScreen(
                         TimelineStepItem(
                             stepNumber = 3,
                             title = "Assigned to Dispatch Driver",
-                            subtitle = if (report.unitAssigned != "Unassigned" && report.unitAssigned.isNotBlank()) "Unit: ${report.unitAssigned}" else "Awaiting dispatch assignment",
-                            isCompleted = report.status == "ASSIGNED" || report.status == "IN_PROGRESS" || report.status == "RESOLVED",
-                            isCurrent = report.status == "ASSIGNED",
+                            subtitle = "",
+                            isCompleted = false,
+                            isCurrent = true,
                             extraContent = {
                                 Surface(
                                     color = Color(0xFFEFF6FF),
@@ -2324,8 +2154,8 @@ fun TicketDetailsScreen(
                                         }
                                         Spacer(modifier = Modifier.width(10.dp))
                                         Column {
-                                            Text(if (report.unitAssigned.isNotBlank()) report.unitAssigned else "Unassigned", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = EcoTextDark)
-                                            Text("CLENRO Dispatch Team", fontSize = 10.sp, color = EcoTextMuted)
+                                            Text("Truck #4", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = EcoTextDark)
+                                            Text("Driver: J. Cruz", fontSize = 10.sp, color = EcoTextMuted)
                                         }
                                     }
                                 }
@@ -2335,17 +2165,17 @@ fun TicketDetailsScreen(
                         TimelineStepItem(
                             stepNumber = 4,
                             title = "Resolution In-Progress",
-                            subtitle = if (report.status == "RESOLVED") "Completed" else "Pending arrival / Cleanup",
-                            isCompleted = report.status == "RESOLVED",
-                            isCurrent = report.status == "IN_PROGRESS"
+                            subtitle = "Pending arrival",
+                            isCompleted = false,
+                            isCurrent = false
                         )
 
                         TimelineStepItem(
                             stepNumber = 5,
                             title = "Cleanup Verified & Closed",
-                            subtitle = if (report.status == "RESOLVED") "Verified by CLENRO Admin" else "Awaiting verification",
-                            isCompleted = report.status == "RESOLVED",
-                            isCurrent = report.status == "RESOLVED",
+                            subtitle = "Awaiting verification",
+                            isCompleted = false,
+                            isCurrent = false,
                             isLast = true
                         )
                     }
@@ -2749,7 +2579,7 @@ fun TipThumbnailBox(
 }
 
 // -----------------------------------------------------------------------------
-// 9. PROFILE TAB CONTENT (HARMONIZED WITH ECO GREEN THEME)
+// 9. PROFILE TAB CONTENT
 // -----------------------------------------------------------------------------
 @Composable
 fun ProfileScreenContent(
@@ -2803,9 +2633,9 @@ fun ProfileScreenContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Harmonized Header Row matching overall app theme
+            // Header Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -2847,7 +2677,7 @@ fun ProfileScreenContent(
             }
         }
 
-        // Profile Main Card with Cover Banner & Unclipped Avatar Camera Badge
+        // Profile Main Card
         item {
             Card(
                 shape = RoundedCornerShape(16.dp),
@@ -2956,7 +2786,7 @@ fun ProfileScreenContent(
                         }
                     }
 
-                    // Overlapping Avatar with 100% Unclipped Camera Badge
+                    // Overlapping Avatar with Camera Badge
                     Box(
                         modifier = Modifier
                             .offset(y = (-40).dp)
@@ -2966,7 +2796,7 @@ fun ProfileScreenContent(
                             modifier = Modifier
                                 .size(84.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFFCBD5E1))
+                                .background(EcoPrimaryGreen)
                                 .border(3.dp, Color.White, CircleShape)
                                 .align(Alignment.Center)
                                 .clickable { showProfilePicker = true },
@@ -2980,16 +2810,15 @@ fun ProfileScreenContent(
                                     contentScale = ContentScale.Crop
                                 )
                             } else {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = "Profile Photo",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(48.dp)
+                                Text(
+                                    text = CityCareApiService.currentUserName.take(1).uppercase().ifEmpty { "U" },
+                                    fontSize = 36.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color.White
                                 )
                             }
                         }
 
-                        // Fully visible Camera Edit Badge on bottom-right corner of avatar
                         Box(
                             modifier = Modifier
                                 .size(28.dp)
@@ -3291,58 +3120,14 @@ fun CategoryChip(
     }
 }
 
-fun openLocationInGoogleMaps(context: android.content.Context, gpsCoordinates: String, label: String = "Report Location") {
-    try {
-        val regex = Regex("""([0-9]+\.?[0-9]*)°?\s*([NS])?,\s*([0-9]+\.?[0-9]*)°?\s*([EW])?""", RegexOption.IGNORE_CASE)
-        val match = regex.find(gpsCoordinates)
-
-        val uri = if (match != null) {
-            var lat = match.groupValues[1].toDoubleOrNull() ?: 8.4822
-            if (match.groupValues[2].equals("S", ignoreCase = true)) lat = -lat
-            var lng = match.groupValues[3].toDoubleOrNull() ?: 124.6175
-            if (match.groupValues[4].equals("W", ignoreCase = true)) lng = -lng
-            android.net.Uri.parse("geo:$lat,$lng?q=$lat,$lng(${android.net.Uri.encode(label)})")
-        } else {
-            val query = android.net.Uri.encode("$gpsCoordinates, Cagayan de Oro City")
-            android.net.Uri.parse("https://www.google.com/maps/search/?api=1&query=$query")
-        }
-
-        val mapIntent = android.content.Intent(android.content.Intent.ACTION_VIEW, uri)
-        mapIntent.setPackage("com.google.android.apps.maps")
-        if (mapIntent.resolveActivity(context.packageManager) != null) {
-            context.startActivity(mapIntent)
-        } else {
-            val browserIntent = android.content.Intent(android.content.Intent.ACTION_VIEW, uri)
-            context.startActivity(browserIntent)
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-        Toast.makeText(context, "Opening Google Maps for location...", Toast.LENGTH_SHORT).show()
-    }
-}
-
 @Composable
-fun MapPreviewBox(
-    heightDp: Int,
-    gpsText: String = "GPS Active",
-    reportTitle: String = "Report Location",
-    onOpenMap: (() -> Unit)? = null
-) {
-    val context = LocalContext.current
-
+fun MapPreviewBox(heightDp: Int) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(heightDp.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFFEBF3FF))
-            .clickable {
-                if (onOpenMap != null) {
-                    onOpenMap()
-                } else {
-                    openLocationInGoogleMaps(context, gpsText, reportTitle)
-                }
-            },
+            .background(Color(0xFFEBF3FF)),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -3372,30 +3157,6 @@ fun MapPreviewBox(
                 tint = EcoPrimaryGreen,
                 modifier = Modifier.size(28.dp)
             )
-            Spacer(modifier = Modifier.height(2.dp))
-            Surface(
-                color = EcoPrimaryGreen,
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Map,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(12.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Tap to View Google Maps",
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-            }
         }
 
         Surface(
@@ -3407,7 +3168,7 @@ fun MapPreviewBox(
                 .padding(8.dp)
         ) {
             Text(
-                text = if (gpsText.isNotBlank()) gpsText else "GPS Active",
+                text = "GPS Active",
                 fontSize = 9.sp,
                 fontWeight = FontWeight.Bold,
                 color = EcoPrimaryGreen,
@@ -3423,19 +3184,13 @@ fun ReportImageThumbnail(
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(Color(0xFFF1F5F9), Color(0xFFE2E8F0))
-                )
-            ),
+        modifier = modifier.background(Color(0xFFE2E8F0)),
         contentAlignment = Alignment.Center
     ) {
         if (bitmap != null) {
             Image(
                 bitmap = bitmap.asImageBitmap(),
-                contentDescription = "Report Photo",
+                contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
@@ -3443,31 +3198,15 @@ fun ReportImageThumbnail(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color(0xFFE0F2FE), Color(0xFFDCFCE7))
-                        )
-                    ),
+                    .background(Color(0xFFCBD5E1)),
                 contentAlignment = Alignment.Center
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Waste Report",
-                        tint = EcoPrimaryGreen.copy(alpha = 0.7f),
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "CityCare",
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = EcoPrimaryGreen.copy(alpha = 0.8f)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Outlined.DeleteOutline,
+                    contentDescription = null,
+                    tint = Color(0xFF64748B),
+                    modifier = Modifier.size(32.dp)
+                )
             }
         }
     }

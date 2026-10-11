@@ -106,7 +106,7 @@ fun CityCareResetPasswordScreen(
                                     color = ResetGreenPrimary
                                 )
                                 Text(
-                                    text = "Recover your CityCare CDO resident account",
+                                    text = "Recover your resident account",
                                     fontSize = 12.sp,
                                     color = ResetTextMuted
                                 )

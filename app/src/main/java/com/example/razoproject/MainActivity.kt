@@ -2,7 +2,6 @@ package com.example.razoproject
 
 import android.app.Activity
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -17,21 +16,30 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
+import androidx.activity.SystemBarStyle
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     // Callback handler for Dashboard internal back navigation
     private var dashboardBackHandler: (() -> Boolean)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        supportRequestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
         super.onCreate(savedInstanceState)
-        requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
+        supportActionBar?.hide()
         actionBar?.hide()
-        enableEdgeToEdge()
+
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+        )
+        WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = false
 
         setContent {
             MaterialTheme {
@@ -107,7 +115,7 @@ class MainActivity : ComponentActivity() {
                 if (showExitDialog) {
                     AlertDialog(
                         onDismissRequest = { showExitDialog = false },
-                        title = { Text("Exit CityCare CDO?", fontWeight = FontWeight.Bold) },
+                        title = { Text("Exit Application?", fontWeight = FontWeight.Bold) },
                         text = { Text("Are you sure you want to exit the application?") },
                         confirmButton = {
                             Button(
